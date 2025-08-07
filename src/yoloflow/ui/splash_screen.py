@@ -157,9 +157,6 @@ class SplashScreen(QSplashScreen):
     def _close_splash(self):
         """Close the splash screen and signal completion."""
         self.close()
-        # Here we would normally open the ProjectManager window
-        # For now, just exit the application
-        QApplication.instance().quit()
 
 
 def show_splash_screen():

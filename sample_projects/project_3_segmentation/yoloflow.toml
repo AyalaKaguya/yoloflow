@@ -1,0 +1,25 @@
+[project]
+name = "语义分割项目"
+task_type = "segmentation"
+created_at = "2025-08-07T15:24:44.948445"
+description = "道路分割项目"
+
+[datasets]
+available = []
+current = ""
+
+[models]
+available = []
+current = ""
+pretrained = []
+
+[training]
+history = []
+
+[training.parameters]
+epochs = 100
+batch_size = 16
+learning_rate = 0.01
+image_size = 640
+
+[custom_fields]
