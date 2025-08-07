@@ -20,223 +20,9 @@ from PySide6.QtGui import QFont, QPalette, QColor, QMouseEvent
 from ..service.project_manager import ProjectManager
 from ..model import TaskType
 from ..__version__ import __version__
+from .components import CustomTitleBar, RecentProjectItem
+from .project_delete_window import ProjectDeleteWindow
 
-
-class CustomTitleBar(QWidget):
-    """自定义标题栏"""
-    
-    close_clicked = Signal()
-    
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.parent_window = parent
-        self.dragging = False
-        self.drag_position = QPoint()
-        self._setup_ui()
-    
-    def _setup_ui(self):
-        """设置标题栏UI"""
-        self.setFixedHeight(40)
-        self.setStyleSheet("""
-            CustomTitleBar {
-                background-color: #2c3e50;
-                border-bottom: 1px solid #34495e;
-            }
-        """)
-        
-        layout = QHBoxLayout(self)
-        layout.setContentsMargins(15, 0, 10, 0)
-        layout.setSpacing(10)
-        
-        # 应用名称和版本号
-        title_label = QLabel(f"YOLOFlow v{__version__}")
-        title_label.setStyleSheet("""
-            QLabel {
-                color: #ecf0f1;
-                font-size: 14px;
-                font-weight: bold;
-                background: transparent;
-            }
-        """)
-        layout.addWidget(title_label)
-        
-        # 弹性空间
-        layout.addStretch()
-        
-        # 关闭按钮
-        self.close_btn = QPushButton("×")
-        self.close_btn.setFixedSize(40, 30)  # 4:3比例，从30x30改为40x30
-        self.close_btn.setStyleSheet("""
-            QPushButton {
-                background-color: transparent;
-                color: #bdc3c7;
-                border: none;
-                font-size: 18px;
-                font-weight: bold;
-                border-radius: 4px;
-            }
-            QPushButton:hover {
-                background-color: #e74c3c;
-                color: white;
-            }
-            QPushButton:pressed {
-                background-color: #c0392b;
-            }
-        """)
-        self.close_btn.clicked.connect(self.close_clicked.emit)
-        self.close_btn.setCursor(Qt.PointingHandCursor)  # 设置鼠标指针为手型
-        layout.addWidget(self.close_btn)
-    
-    def mousePressEvent(self, event: QMouseEvent):
-        """鼠标按下事件 - 开始拖拽"""
-        if event.button() == Qt.LeftButton and self.parent_window:
-            self.dragging = True
-            self.drag_position = event.globalPosition().toPoint() - self.parent_window.frameGeometry().topLeft()
-            event.accept()
-    
-    def mouseMoveEvent(self, event: QMouseEvent):
-        """鼠标移动事件 - 拖拽窗口"""
-        if event.buttons() == Qt.LeftButton and self.dragging and self.parent_window:
-            self.parent_window.move(event.globalPosition().toPoint() - self.drag_position)
-            event.accept()
-    
-    def mouseReleaseEvent(self, event: QMouseEvent):
-        """鼠标释放事件 - 结束拖拽"""
-        if event.button() == Qt.LeftButton:
-            self.dragging = False
-            event.accept()
-
-
-class RecentProjectItem(QWidget):
-    """最近项目列表项的自定义widget"""
-    
-    project_clicked = Signal(str)  # 项目路径信号
-    delete_requested = Signal(str)  # 删除项目信号
-    
-    def __init__(self, project_data: Dict[str, Any]):
-        super().__init__()
-        self.project_path = project_data['path']
-        self.is_hovered = False
-        self._setup_ui(project_data)
-        # 启用鼠标追踪来接收鼠标进入/离开事件
-        self.setMouseTracking(True)
-    
-    def _setup_ui(self, project_data: Dict[str, Any]):
-        """设置UI"""
-        # 主布局 - 水平布局包含项目信息和删除按钮
-        main_layout = QHBoxLayout(self)
-        main_layout.setContentsMargins(12, 10, 12, 10)
-        main_layout.setSpacing(10)
-        
-        # 项目信息布局 - 垂直布局
-        info_layout = QVBoxLayout()
-        info_layout.setSpacing(4)
-        
-        # 项目名称
-        name_label = QLabel(project_data['name'])
-        name_font = QFont()
-        name_font.setPointSize(11)
-        name_font.setBold(True)
-        name_label.setFont(name_font)
-        name_label.setStyleSheet("color: #ffffff; background: transparent;")
-        name_label.setWordWrap(True)  # 允许文字换行
-        name_label.setMinimumHeight(24)  # 设置最小高度确保显示完整
-        info_layout.addWidget(name_label)
-        
-        # 添加项目名称与下面内容的间距
-        info_layout.addSpacing(6)
-        
-        # 项目路径
-        path_label = QLabel(project_data['path'])
-        path_label.setStyleSheet("color: #b0b0b0; background: transparent;")  # 确保背景透明
-        path_font = QFont()
-        path_font.setPointSize(9)
-        path_label.setFont(path_font)
-        info_layout.addWidget(path_label)
-        
-        # 最后打开时间
-        if project_data.get('last_opened_at'):
-            try:
-                # 解析ISO格式时间
-                last_opened = datetime.fromisoformat(project_data['last_opened_at'])
-                time_str = last_opened.strftime("%Y-%m-%d %H:%M")
-            except:
-                time_str = project_data['last_opened_at']
-        else:
-            time_str = "从未打开"
-            
-        time_label = QLabel(f"最后打开: {time_str}")
-        time_label.setStyleSheet("color: #808080; background: transparent;")  # 确保背景透明
-        time_font = QFont()
-        time_font.setPointSize(8)
-        time_label.setFont(time_font)
-        info_layout.addWidget(time_label)
-        
-        # 将项目信息布局添加到主布局
-        main_layout.addLayout(info_layout)
-        
-        # 删除按钮
-        self.delete_btn = QPushButton("🗑")  # 使用垃圾桶图标
-        self.delete_btn.setFixedSize(30, 30)
-        self.delete_btn.setStyleSheet("""
-            QPushButton {
-                background-color: transparent;
-                color: #808080;
-                border: none;
-                border-radius: 4px;
-                font-size: 14px;
-            }
-            QPushButton:hover {
-                background-color: #e74c3c;
-                color: white;
-            }
-            QPushButton:pressed {
-                background-color: #c0392b;
-            }
-        """)
-        self.delete_btn.clicked.connect(lambda: self.delete_requested.emit(self.project_path))
-        self.delete_btn.setCursor(Qt.PointingHandCursor)  # 设置鼠标指针为手型
-        main_layout.addWidget(self.delete_btn)
-        
-        # 设置初始样式
-        self._update_style()
-    
-    def _update_style(self):
-        """更新样式"""
-        if self.is_hovered:
-            self.setStyleSheet("""
-                RecentProjectItem {
-                    background-color: #4a4a4a;
-                    border: 1px solid #4a90e2;
-                    border-radius: 6px;
-                }
-            """)
-        else:
-            self.setStyleSheet("""
-                RecentProjectItem {
-                    background-color: #404040;
-                    border: 1px solid #5a5a5a;
-                    border-radius: 6px;
-                }
-            """)
-    
-    def enterEvent(self, event):
-        """鼠标进入事件"""
-        self.is_hovered = True
-        self._update_style()
-        super().enterEvent(event)
-    
-    def leaveEvent(self, event):
-        """鼠标离开事件"""
-        self.is_hovered = False
-        self._update_style()
-        super().leaveEvent(event)
-    
-    def mousePressEvent(self, event):
-        """鼠标点击事件"""
-        if event.button() == Qt.LeftButton:
-            self.project_clicked.emit(self.project_path)
-        super().mousePressEvent(event)
 
 
 class ProjectManagerWindow(QMainWindow):
@@ -500,41 +286,24 @@ class ProjectManagerWindow(QMainWindow):
         QMessageBox.information(self, "提示", "设置功能将在后续实现")
     
     def _delete_project(self, project_path: str):
-        """删除项目"""
-        # 显示确认对话框
-        reply = QMessageBox.question(
-            self,
-            "删除项目",
-            f"确定要删除项目记录吗？\n\n项目路径: {project_path}",
-            QMessageBox.Yes | QMessageBox.No,
-            QMessageBox.No
-        )
-        
-        if reply == QMessageBox.Yes:
-            try:
-                # 询问是否删除项目文件夹
-                delete_folder_reply = QMessageBox.question(
-                    self,
-                    "删除项目文件夹",
-                    f"是否同时删除项目文件夹？\n\n文件夹: {project_path}\n\n警告：此操作不可恢复！",
-                    QMessageBox.Yes | QMessageBox.No,
-                    QMessageBox.No
-                )
-                
-                # 根据用户选择删除项目
-                delete_files = delete_folder_reply == QMessageBox.Yes
-                self.project_manager.remove_project(project_path, delete_files=delete_files)
-                
-                if delete_files:
-                    QMessageBox.information(self, "成功", "项目记录和文件夹已删除")
-                else:
-                    QMessageBox.information(self, "成功", "项目记录已删除")
-                
-                # 刷新项目列表
-                self._load_recent_projects()
-                
-            except Exception as e:
-                QMessageBox.critical(self, "错误", f"删除项目失败: {str(e)}")
+        """删除项目 - 打开删除确认界面"""
+        delete_window = ProjectDeleteWindow(project_path, self.project_manager)
+        delete_window.delete_confirmed.connect(self._on_delete_confirmed)
+        delete_window.delete_cancelled.connect(self._on_delete_cancelled)
+        delete_window.show()
+    
+    def _on_delete_confirmed(self, project_path: str, delete_files: bool):
+        """删除确认后的处理"""
+        try:
+            self.project_manager.remove_project(project_path, delete_files=delete_files)
+            # 刷新项目列表
+            self._load_recent_projects()
+        except Exception as e:
+            QMessageBox.critical(self, "错误", f"删除项目失败: {str(e)}")
+    
+    def _on_delete_cancelled(self):
+        """删除取消后的处理"""
+        pass  # 不需要特殊处理
     
     def _open_project_from_list(self, project_path: str):
         """从列表中打开项目"""
