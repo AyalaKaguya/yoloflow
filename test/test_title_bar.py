@@ -55,8 +55,8 @@ class TestCustomTitleBar(unittest.TestCase):
         # Check that close button exists
         self.assertIsNotNone(title_bar.close_btn)
         self.assertEqual(title_bar.close_btn.text(), "×")
-        self.assertEqual(title_bar.close_btn.size().width(), 30)
-        self.assertEqual(title_bar.close_btn.size().height(), 30)
+        self.assertEqual(title_bar.close_btn.size().width(), 40)  # 更新为新的宽度
+        self.assertEqual(title_bar.close_btn.size().height(), 30)  # 更新为新的高度
         
         print("✅ Close button test passed")
 
