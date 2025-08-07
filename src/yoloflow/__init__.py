@@ -8,7 +8,8 @@ Provides project management, dataset handling, model training, and export capabi
 from .__version__ import __version__
 from .cli import main
 from .ui import SplashScreen, show_splash_screen
-from .service import Project, ProjectConfig, ProjectManager
+from .model import Project, ProjectConfig, TaskType
+from .service import ProjectManager
 
 __all__ = [
     '__version__',
@@ -17,5 +18,6 @@ __all__ = [
     'show_splash_screen',
     'Project',
     'ProjectConfig',
+    'TaskType',
     'ProjectManager',
 ]

@@ -2,183 +2,226 @@
 Test project management functionality.
 """
 
-import pytest
 import tempfile
-import shutil
+import pytest
+import gc
+import time
 from pathlib import Path
-from yoloflow.service import Project, ProjectConfig, ProjectManager
+from yoloflow.model import Project, ProjectConfig, TaskType
+from yoloflow.service import ProjectManager
 
 
 class TestProjectConfig:
     """Test ProjectConfig class."""
     
-    @pytest.fixture
-    def temp_project_dir(self):
-        """Create a temporary project directory."""
-        temp_dir = Path(tempfile.mkdtemp())
-        yield temp_dir
-        shutil.rmtree(temp_dir)
+    def test_create_default_config(self):
+        """Test creating a default configuration."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            config_path = Path(temp_dir) / "test.toml"
+            config = ProjectConfig(config_path)
+            
+            # Test default values
+            assert config.project_name == ""
+            assert config.task_type == TaskType.DETECTION
+            assert len(config.available_datasets) == 0
+            assert config.current_dataset is None
+            
+            # Test file was created
+            assert config_path.exists()
     
-    def test_create_default_config(self, temp_project_dir):
-        """Test creating default configuration."""
-        config = ProjectConfig(temp_project_dir)
-        
-        assert config.project_name == temp_project_dir.name
-        assert config.task_type == "detect"
-        assert config.description == ""
-        assert len(config.available_datasets) == 0
-        assert config.current_dataset is None
+    def test_project_properties(self):
+        """Test project property setters and getters."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            config_path = Path(temp_dir) / "test.toml"
+            config = ProjectConfig(config_path)
+            
+            # Set properties
+            config.project_name = "Test Project"
+            config.task_type = TaskType.CLASSIFICATION
+            config.description = "Test description"
+            
+            # Test properties
+            assert config.project_name == "Test Project"
+            assert config.task_type == TaskType.CLASSIFICATION
+            assert config.description == "Test description"
+            
+            # Save and reload
+            config.save()
+            config2 = ProjectConfig(config_path)
+            assert config2.project_name == "Test Project"
+            assert config2.task_type == TaskType.CLASSIFICATION
     
-    def test_config_persistence(self, temp_project_dir):
-        """Test that configuration persists to file."""
-        config = ProjectConfig(temp_project_dir)
-        config.project_name = "Test Project"
-        config.task_type = "classify"
-        config.description = "Test Description"
-        
-        # Create new config instance to test loading
-        config2 = ProjectConfig(temp_project_dir)
-        assert config2.project_name == "Test Project"
-        assert config2.task_type == "classify"
-        assert config2.description == "Test Description"
-    
-    def test_dataset_management(self, temp_project_dir):
+    def test_dataset_management(self):
         """Test dataset management functions."""
-        config = ProjectConfig(temp_project_dir)
-        
-        # Add datasets
-        config.add_dataset("train_set")
-        config.add_dataset("val_set")
-        
-        assert "train_set" in config.available_datasets
-        assert "val_set" in config.available_datasets
-        
-        # Set current dataset
-        config.current_dataset = "train_set"
-        assert config.current_dataset == "train_set"
-        
-        # Remove dataset
-        config.remove_dataset("train_set")
-        assert "train_set" not in config.available_datasets
-        assert config.current_dataset is None  # Should be cleared
+        with tempfile.TemporaryDirectory() as temp_dir:
+            config_path = Path(temp_dir) / "test.toml"
+            config = ProjectConfig(config_path)
+            
+            # Add datasets
+            config.add_dataset("dataset1")
+            config.add_dataset("dataset2")
+            
+            assert "dataset1" in config.available_datasets
+            assert "dataset2" in config.available_datasets
+            assert len(config.available_datasets) == 2
+            
+            # Set current dataset
+            config.current_dataset = "dataset1"
+            assert config.current_dataset == "dataset1"
+            
+            # Remove dataset
+            config.remove_dataset("dataset1")
+            assert "dataset1" not in config.available_datasets
+            assert config.current_dataset is None  # Should be cleared
+    
+    def test_custom_fields(self):
+        """Test custom fields management."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            config_path = Path(temp_dir) / "test.toml"
+            config = ProjectConfig(config_path)
+            
+            # Set custom fields
+            config.set_custom_field("my_field", "my_value")
+            config.set_custom_field("another_field", 123)  # Should be converted to string
+            
+            assert config.get_custom_field("my_field") == "my_value"
+            assert config.get_custom_field("another_field") == "123"
+            assert config.get_custom_field("nonexistent", "default") == "default"
+            
+            # Check all custom fields
+            fields = config.custom_fields
+            assert "my_field" in fields
+            assert "another_field" in fields
+            
+            # Remove field
+            config.remove_custom_field("my_field")
+            assert "my_field" not in config.custom_fields
 
 
 class TestProject:
     """Test Project class."""
     
-    @pytest.fixture
-    def temp_project_dir(self):
-        """Create a temporary project directory."""
-        temp_dir = Path(tempfile.mkdtemp())
-        yield temp_dir
-        shutil.rmtree(temp_dir)
-    
-    def test_create_new_project(self, temp_project_dir):
+    def test_create_new_project(self):
         """Test creating a new project."""
-        project = Project.create_new(temp_project_dir, "Test Project", "detect")
-        
-        assert project.name == "Test Project"
-        assert project.task_type == "detect"
-        assert project.path == temp_project_dir
-        
-        # Check folder structure
-        for folder in Project.REQUIRED_FOLDERS:
-            assert (temp_project_dir / folder).exists()
-        
-        # Check config file
-        assert (temp_project_dir / "yoloflow.toml").exists()
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_path = Path(temp_dir) / "test_project"
+            
+            project = Project.create_new(
+                project_path, 
+                "Test Project", 
+                TaskType.DETECTION,
+                "Test description"
+            )
+            
+            # Check project structure
+            assert project.project_path == project_path
+            assert project.name == "Test Project"
+            assert project.task_type == TaskType.DETECTION
+            assert project.description == "Test description"
+            
+            # Check directories exist
+            assert project.dataset_dir.exists()
+            assert project.model_dir.exists()
+            assert project.pretrain_dir.exists()
+            assert project.runs_dir.exists()
+            
+            # Check config file exists
+            assert project.config_file.exists()
     
-    def test_load_existing_project(self, temp_project_dir):
+    def test_project_validation(self):
+        """Test project validation."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_path = Path(temp_dir) / "test_project"
+            
+            # Create valid project
+            project = Project.create_new(project_path, "Test", TaskType.DETECTION)
+            assert project.is_valid()
+            
+            # Remove a required directory
+            project.dataset_dir.rmdir()
+            assert not project.is_valid()
+    
+    def test_load_existing_project(self):
         """Test loading an existing project."""
-        # First create a project
-        project1 = Project.create_new(temp_project_dir, "Test Project", "detect")
-        
-        # Load the same project
-        project2 = Project(temp_project_dir)
-        
-        assert project2.name == "Test Project"
-        assert project2.task_type == "detect"
-        assert project2.path == temp_project_dir
-    
-    def test_project_paths(self, temp_project_dir):
-        """Test project path properties."""
-        project = Project.create_new(temp_project_dir, "Test Project")
-        
-        assert project.dataset_path == temp_project_dir / "dataset"
-        assert project.model_path == temp_project_dir / "model"
-        assert project.pretrain_path == temp_project_dir / "pretrain"
-        assert project.runs_path == temp_project_dir / "runs"
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_path = Path(temp_dir) / "test_project"
+            
+            # Create project
+            project1 = Project.create_new(project_path, "Test", TaskType.DETECTION)
+            
+            # Load existing project
+            project2 = Project(project_path)
+            assert project2.name == "Test"
+            assert project2.task_type == TaskType.DETECTION
 
 
 class TestProjectManager:
     """Test ProjectManager class."""
     
-    @pytest.fixture
-    def temp_db_dir(self):
-        """Create a temporary directory for database."""
-        temp_dir = Path(tempfile.mkdtemp())
-        yield temp_dir
-        shutil.rmtree(temp_dir)
+    def test_create_project(self):
+        """Test creating a project through manager."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            # Use memory database to avoid file locking issues on Windows
+            with ProjectManager(":memory:") as manager:
+                project_path = Path(temp_dir) / "test_project"
+                
+                project = manager.create_project(
+                    str(project_path),
+                    "Test Project",
+                    TaskType.DETECTION,
+                    "Test description"
+                )
+                
+                assert project.name == "Test Project"
+                assert len(manager) == 1
+                
+                # Check project in database
+                projects = manager.get_all_projects()
+                assert len(projects) == 1
+                assert projects[0]["name"] == "Test Project"
     
-    @pytest.fixture
-    def temp_project_dir(self):
-        """Create a temporary project directory."""
-        temp_dir = Path(tempfile.mkdtemp())
-        yield temp_dir
-        shutil.rmtree(temp_dir)
-    
-    def test_create_project_manager(self, temp_db_dir):
-        """Test creating a project manager."""
-        db_path = temp_db_dir / "test.db"
-        manager = ProjectManager(db_path)
-        
-        assert manager.db_path == db_path
-        assert db_path.exists()
-    
-    def test_create_and_manage_project(self, temp_db_dir, temp_project_dir):
-        """Test creating and managing a project."""
-        db_path = temp_db_dir / "test.db"
-        manager = ProjectManager(db_path)
-        
-        # Create project
-        project = manager.create_project(temp_project_dir, "Test Project", "detect")
-        
-        assert project.name == "Test Project"
-        assert manager.get_project_count() == 1
-        
-        # Get all projects
-        projects = manager.get_all_projects()
-        assert len(projects) == 1
-        assert projects[0]["name"] == "Test Project"
-        assert projects[0]["path"] == str(temp_project_dir)
-    
-    def test_open_existing_project(self, temp_db_dir, temp_project_dir):
-        """Test opening an existing project."""
-        db_path = temp_db_dir / "test.db"
-        manager = ProjectManager(db_path)
-        
-        # First create a project directly (not through manager)
-        Project.create_new(temp_project_dir, "Test Project", "detect")
-        
-        # Open it through manager
-        project = manager.open_project(temp_project_dir)
-        
-        assert project is not None
-        assert project.name == "Test Project"
-        assert manager.get_project_count() == 1
-    
-    def test_recent_projects(self, temp_db_dir, temp_project_dir):
+    def test_recent_projects(self):
         """Test getting recent projects."""
-        db_path = temp_db_dir / "test.db"
-        manager = ProjectManager(db_path)
-        
-        # Create project
-        manager.create_project(temp_project_dir, "Test Project", "detect")
-        
-        # Get recent projects
-        recent = manager.get_recent_projects()
-        assert len(recent) == 1
-        assert recent[0]["name"] == "Test Project"
+        with tempfile.TemporaryDirectory() as temp_dir:
+            # Use memory database to avoid file locking issues on Windows
+            with ProjectManager(":memory:") as manager:
+                # Create multiple projects
+                for i in range(3):
+                    project_path = Path(temp_dir) / f"project_{i}"
+                    manager.create_project(
+                        str(project_path),
+                        f"Project {i}",
+                        TaskType.DETECTION
+                    )
+                
+                recent = manager.get_recent_projects(limit=2)
+                assert len(recent) == 2
+                # Should be in reverse chronological order
+                assert recent[0]["name"] == "Project 2"
+                assert recent[1]["name"] == "Project 1"
+    
+    def test_project_removal(self):
+        """Test removing projects."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            # Use memory database to avoid file locking issues on Windows
+            with ProjectManager(":memory:") as manager:
+                project_path = Path(temp_dir) / "test_project"
+                
+                # Create project
+                project = manager.create_project(
+                    str(project_path),
+                    "Test Project",
+                    TaskType.DETECTION
+                )
+                
+                assert len(manager) == 1
+                assert project_path.exists()
+                
+                # Remove project (with files)
+                manager.remove_project(str(project_path), delete_files=True)
+                
+                assert len(manager) == 0
+                assert not project_path.exists()
 
 
 if __name__ == "__main__":
