@@ -192,7 +192,7 @@ class ProjectManagerWindow(QMainWindow):
         title_font.setPointSize(16)
         title_font.setBold(True)
         title_label.setFont(title_font)
-        title_label.setStyleSheet("color: #ffffff; margin-bottom: 20px;")
+        title_label.setStyleSheet("color: #ffffff; margin-bottom: 10px; margin-top: 10px;")
         layout.addWidget(title_label)
         
         # 项目列表
@@ -232,7 +232,7 @@ class ProjectManagerWindow(QMainWindow):
                 item = QListWidgetItem()
                 empty_widget = QLabel("暂无最近项目\n点击左侧按钮创建或打开项目")
                 empty_widget.setAlignment(Qt.AlignCenter)
-                empty_widget.setStyleSheet("color: #808080; padding: 40px; font-size: 14px;")
+                empty_widget.setStyleSheet("color: #808080; padding: 40px; font-size: 14px; background: transparent;")
                 item.setSizeHint(empty_widget.sizeHint())
                 self.recent_projects_list.addItem(item)
                 self.recent_projects_list.setItemWidget(item, empty_widget)

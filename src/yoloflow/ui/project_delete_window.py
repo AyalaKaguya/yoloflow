@@ -103,7 +103,7 @@ class ProjectDeleteWindow(QMainWindow):
         """)
         
         layout = QVBoxLayout(content_widget)
-        layout.setContentsMargins(30, 30, 30, 30)
+        layout.setContentsMargins(30, 10, 30, 10)
         layout.setSpacing(20)
         
         # 警告标题
@@ -112,16 +112,17 @@ class ProjectDeleteWindow(QMainWindow):
         warning_font.setPointSize(16)
         warning_font.setBold(True)
         warning_label.setFont(warning_font)
-        warning_label.setStyleSheet("color: #e74c3c; margin-bottom: 10px;")
+        warning_label.setStyleSheet("color: #e74c3c;")
         layout.addWidget(warning_label)
         
         # 提示信息
         info_label = QLabel("您确定要删除以下项目吗？此操作无法撤销。")
-        info_label.setStyleSheet("color: #ffffff; font-size: 14px; margin-bottom: 20px;")
+        info_label.setStyleSheet("color: #ffffff; font-size: 14px;")
         layout.addWidget(info_label)
         
         # 项目信息区域
         project_info_frame = self._create_project_info_frame()
+        project_info_frame.setMinimumHeight(140)  # 加高显示区域
         layout.addWidget(project_info_frame)
         
         # 选项区域
@@ -135,7 +136,7 @@ class ProjectDeleteWindow(QMainWindow):
         layout.addStretch()
         
         return content_widget
-    
+
     def _create_project_info_frame(self):
         """创建项目信息框架"""
         frame = QFrame()
@@ -144,17 +145,19 @@ class ProjectDeleteWindow(QMainWindow):
                 background-color: #363636;
                 border: 1px solid #4a4a4a;
                 border-radius: 8px;
-                padding: 15px;
+            }
+            QFrame QLabel {
+                color: #ffffff;
+                font-size: 12px;
+                border: none;
             }
         """)
         
         layout = QVBoxLayout(frame)
-        layout.setSpacing(12)
         
         # 项目名称
         name_label = QLabel(f"项目名称: {self.project_data['name']}")
         name_font = QFont()
-        name_font.setPointSize(12)
         name_font.setBold(True)
         name_label.setFont(name_font)
         name_label.setStyleSheet("color: #ffffff;")
@@ -211,7 +214,6 @@ class ProjectDeleteWindow(QMainWindow):
                 background-color: #363636;
                 border: 1px solid #4a4a4a;
                 border-radius: 8px;
-                padding: 15px;
             }
         """)
         
@@ -223,6 +225,7 @@ class ProjectDeleteWindow(QMainWindow):
             QCheckBox {
                 color: #ffffff;
                 font-size: 12px;
+                background: transparent;
             }
             QCheckBox::indicator {
                 width: 18px;
@@ -245,8 +248,8 @@ class ProjectDeleteWindow(QMainWindow):
         layout.addWidget(self.delete_files_checkbox)
         
         # 警告文字
-        warning_text = QLabel("⚠️ 如果选择删除文件夹，所有项目文件将被永久删除且无法恢复！")
-        warning_text.setStyleSheet("color: #e67e22; font-size: 10px; margin-top: 8px;")
+        warning_text = QLabel("如果选择删除文件夹，所有项目文件将被永久删除且无法恢复！")
+        warning_text.setStyleSheet("color: #e67e22; font-size: 10px; margin-top: 4px; margin-left: 24px; border: none;")
         warning_text.setWordWrap(True)
         layout.addWidget(warning_text)
         
