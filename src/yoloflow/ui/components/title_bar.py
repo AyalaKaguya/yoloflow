@@ -72,24 +72,24 @@ class CustomTitleBar(QWidget):
             }
         """)
         self.close_btn.clicked.connect(self.close_clicked.emit)
-        self.close_btn.setCursor(Qt.PointingHandCursor)
+        self.close_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         layout.addWidget(self.close_btn)
     
     def mousePressEvent(self, event: QMouseEvent):
         """鼠标按下事件 - 开始拖拽"""
-        if event.button() == Qt.LeftButton and self.parent_window:
+        if event.button() == Qt.MouseButton.LeftButton and self.parent_window:
             self.dragging = True
             self.drag_position = event.globalPosition().toPoint() - self.parent_window.frameGeometry().topLeft()
             event.accept()
     
     def mouseMoveEvent(self, event: QMouseEvent):
         """鼠标移动事件 - 拖拽窗口"""
-        if event.buttons() == Qt.LeftButton and self.dragging and self.parent_window:
+        if event.buttons() == Qt.MouseButton.LeftButton and self.dragging and self.parent_window:
             self.parent_window.move(event.globalPosition().toPoint() - self.drag_position)
             event.accept()
     
     def mouseReleaseEvent(self, event: QMouseEvent):
         """鼠标释放事件 - 结束拖拽"""
-        if event.button() == Qt.LeftButton:
+        if event.button() == Qt.MouseButton.LeftButton:
             self.dragging = False
             event.accept()

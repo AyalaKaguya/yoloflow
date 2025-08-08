@@ -98,7 +98,7 @@ class RecentProjectItem(QWidget):
             }
         """)
         self.delete_btn.clicked.connect(lambda: self.delete_requested.emit(self.project_path))
-        self.delete_btn.setCursor(Qt.PointingHandCursor)
+        self.delete_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         main_layout.addWidget(self.delete_btn)
         
         # 设置初始样式
@@ -137,6 +137,6 @@ class RecentProjectItem(QWidget):
     
     def mousePressEvent(self, event):
         """鼠标点击事件"""
-        if event.button() == Qt.LeftButton:
+        if event.button() == Qt.MouseButton.LeftButton:
             self.project_clicked.emit(self.project_path)
         super().mousePressEvent(event)

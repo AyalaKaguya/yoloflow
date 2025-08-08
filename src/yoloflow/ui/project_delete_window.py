@@ -22,12 +22,12 @@ class ProjectDeleteWindow(QMainWindow):
     
     delete_confirmed = Signal(str, bool)  # 删除确认信号 (project_path, delete_files)
     delete_cancelled = Signal()  # 取消删除信号
-    
+
     def __init__(self, project_path: str, project_manager: Optional[ProjectManager] = None):
         super().__init__()
         self.project_path = project_path
         self.project_manager = project_manager or ProjectManager()
-        self.project_data = None
+        self.project_data: Optional[dict[str, Any]] = None
         self._load_project_data()
         self._setup_ui()
     
@@ -65,8 +65,8 @@ class ProjectDeleteWindow(QMainWindow):
         # 设置窗口属性
         self.setWindowTitle("删除项目")
         self.setFixedSize(600, 450)
-        self.setWindowFlags(Qt.FramelessWindowHint)
-        
+        self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
+
         # 主widget
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
@@ -154,6 +154,7 @@ class ProjectDeleteWindow(QMainWindow):
         """)
         
         layout = QVBoxLayout(frame)
+        assert self.project_data is not None, "项目数据未加载"
         
         # 项目名称
         name_label = QLabel(f"项目名称: {self.project_data['name']}")
@@ -285,7 +286,7 @@ class ProjectDeleteWindow(QMainWindow):
             }
         """)
         cancel_btn.clicked.connect(self._on_cancel)
-        cancel_btn.setCursor(Qt.PointingHandCursor)
+        cancel_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         layout.addWidget(cancel_btn)
         
         # 删除按钮
@@ -308,7 +309,7 @@ class ProjectDeleteWindow(QMainWindow):
             }
         """)
         delete_btn.clicked.connect(self._on_delete)
-        delete_btn.setCursor(Qt.PointingHandCursor)
+        delete_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         layout.addWidget(delete_btn)
         
         return frame

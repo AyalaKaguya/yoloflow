@@ -40,10 +40,10 @@ class SplashScreen(QSplashScreen):
     def __init__(self):
         # Create a simple colored pixmap as placeholder
         pixmap = self._create_placeholder_image()
-        super().__init__(pixmap, Qt.WindowStaysOnTopHint)
-        
-        self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint)
-        
+        super().__init__(pixmap, Qt.WindowType.WindowStaysOnTopHint)
+
+        self.setWindowFlags(Qt.WindowType.WindowStaysOnTopHint | Qt.WindowType.FramelessWindowHint)
+
         # Setup UI elements
         self._setup_ui()
         
@@ -68,11 +68,11 @@ class SplashScreen(QSplashScreen):
         pixmap.fill(QColor(45, 52, 64))  # Dark blue-gray background
         
         painter = QPainter(pixmap)
-        painter.setRenderHint(QPainter.Antialiasing)
-        
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+
         # Draw title
         painter.setPen(QColor(255, 255, 255))
-        title_font = QFont("Arial", 36, QFont.Bold)
+        title_font = QFont("Arial", 36, QFont.Weight.Bold)
         painter.setFont(title_font)
         painter.drawText(50, 150, "YOLOFlow")
         

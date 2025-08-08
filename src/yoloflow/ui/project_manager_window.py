@@ -39,7 +39,7 @@ class ProjectManagerWindow(QMainWindow):
         # 设置窗口属性
         self.setWindowTitle("YOLOFlow - 项目管理器")
         self.setFixedSize(900, 600)
-        self.setWindowFlags(Qt.FramelessWindowHint)  # 无边框
+        self.setWindowFlags(Qt.WindowType.FramelessWindowHint)  # 无边框
         
         # 主widget
         central_widget = QWidget()
@@ -66,8 +66,8 @@ class ProjectManagerWindow(QMainWindow):
         
         # 分隔线
         separator = QFrame()
-        separator.setFrameShape(QFrame.VLine)
-        separator.setFrameShadow(QFrame.Sunken)
+        separator.setFrameShape(QFrame.Shape.VLine)
+        separator.setFrameShadow(QFrame.Shadow.Sunken)
         separator.setStyleSheet("color: #d0d0d0;")
         content_layout.addWidget(separator)
         
@@ -168,10 +168,10 @@ class ProjectManagerWindow(QMainWindow):
         
         # 设置鼠标指针为手型
         from PySide6.QtCore import Qt
-        self.btn_new_project.setCursor(Qt.PointingHandCursor)
-        self.btn_open_project.setCursor(Qt.PointingHandCursor)
-        self.btn_settings.setCursor(Qt.PointingHandCursor)
-        
+        self.btn_new_project.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_open_project.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_settings.setCursor(Qt.CursorShape.PointingHandCursor)
+
         return panel
     
     def _create_right_panel(self):
@@ -231,7 +231,7 @@ class ProjectManagerWindow(QMainWindow):
                 # 显示空状态
                 item = QListWidgetItem()
                 empty_widget = QLabel("暂无最近项目\n点击左侧按钮创建或打开项目")
-                empty_widget.setAlignment(Qt.AlignCenter)
+                empty_widget.setAlignment(Qt.AlignmentFlag.AlignCenter)
                 empty_widget.setStyleSheet("color: #808080; padding: 40px; font-size: 14px; background: transparent;")
                 item.setSizeHint(empty_widget.sizeHint())
                 self.recent_projects_list.addItem(item)
