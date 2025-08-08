@@ -511,7 +511,11 @@ class CreateProjectWizard(QMainWindow):
         """更新模型列表"""
         # 清空现有内容
         for i in reversed(range(self.model_list_layout.count())):
-            self.model_list_layout.itemAt(i).widget().setParent(None)
+            item = self.model_list_layout.itemAt(i)
+            if item is not None:
+                widget = item.widget()
+                if widget is not None:
+                    widget.setParent(None)
             
         if not self.selected_task_type:
             return
