@@ -46,6 +46,10 @@ class CreateProjectWizard(QMainWindow):
         self.project_path: str = ""
         self.datasets: List[DatasetInfo] = []
         self.selected_models: List[ModelInfo] = []
+        
+        # 用于跟踪模型列表是否需要更新
+        self._last_task_type: Optional[TaskType] = None
+        self._model_list_initialized = False
 
         self._setup_ui()
         self._setup_styles()
@@ -216,10 +220,16 @@ class CreateProjectWizard(QMainWindow):
         # 点击卡片选中单选按钮
         def on_card_clicked():
             radio.setChecked(True)
+            old_task_type = self.selected_task_type
             self.selected_task_type = task_info.task_type
-            # 重置已选择的模型
-            self.selected_models.clear()
-            self._update_selected_models_display()
+            
+            # 只有在任务类型真正改变时才重置已选择的模型
+            if old_task_type != self.selected_task_type:
+                self.selected_models.clear()
+                self._last_task_type = self.selected_task_type
+                self._model_list_initialized = False  # 标记需要重新初始化模型列表
+                self._update_selected_models_display()
+            
             self._update_button_state()
 
         card.mousePressEvent = lambda e: on_card_clicked()
@@ -592,6 +602,10 @@ class CreateProjectWizard(QMainWindow):
             # 使用自定义属性存储模型信息
             checkbox.setProperty("model_info", model)
             
+            # 恢复之前的选择状态
+            if model in self.selected_models:
+                checkbox.setChecked(True)
+            
             # 连接选择事件
             checkbox.stateChanged.connect(lambda state, m=model: self._on_model_selection_changed(state, m))
 
@@ -605,6 +619,9 @@ class CreateProjectWizard(QMainWindow):
             self.model_list_layout.addWidget(desc_label)
 
         self.model_list_layout.addStretch()
+        
+        # 更新选择计数显示
+        self._update_selected_models_display()
 
     def _on_model_selection_changed(self, state, model):
         """模型选择改变时的处理"""
@@ -644,9 +661,14 @@ class CreateProjectWizard(QMainWindow):
 
     def _on_tab_changed(self, index):
         """Tab页面切换时的处理"""
-        # 如果切换到模型配置页面且之前没有更新过模型列表，则更新
+        # 如果切换到模型配置页面且需要更新模型列表
         if index == 3 and self.selected_task_type:  # 模型配置页面索引为3
-            self._update_model_list()
+            # 只有在任务类型改变或首次进入时才更新模型列表
+            if (not self._model_list_initialized or 
+                self._last_task_type != self.selected_task_type):
+                self._update_model_list()
+                self._model_list_initialized = True
+                self._last_task_type = self.selected_task_type
         # 更新按钮状态
         self._update_button_state()
 
