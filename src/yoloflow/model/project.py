@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Optional, Union, List
 
 from .project_config import ProjectConfig, TaskType
+from .dataset_manager import DatasetManager
 
 
 class Project:
@@ -50,6 +51,9 @@ class Project:
         # Load or create configuration
         config_path = self.project_path / self.CONFIG_FILE
         self.config = ProjectConfig(config_path)
+        
+        # Initialize dataset manager
+        self.dataset_manager = DatasetManager(self.config, self.project_path)
         
         # Validate project structure
         self._ensure_project_structure()

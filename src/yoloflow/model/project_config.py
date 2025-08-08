@@ -4,7 +4,7 @@ Project configuration management for YOLOFlow projects.
 
 import json
 from datetime import datetime
-from enum import Enum
+from .task_type import TaskType
 from pathlib import Path
 from typing import Dict, List, Optional, Any, Union
 
@@ -13,16 +13,6 @@ try:
 except ImportError:
     import tomli as tomllib
 import tomli_w
-
-
-class TaskType(Enum):
-    """Supported task types for YOLO projects."""
-    CLASSIFICATION = "classification"
-    DETECTION = "detection"
-    SEGMENTATION = "segmentation"
-    INSTANCE_SEGMENTATION = "instance_segmentation"
-    KEYPOINT = "keypoint"
-    ORIENTED_DETECTION = "oriented_detection"
 
 
 class ProjectConfig:
