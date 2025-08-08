@@ -27,7 +27,6 @@ class ProjectPlanManager:
         """
         self.project_path = Path(project_path)
         self.config = project_config
-        self.task_type = project_config.task_type
         self.model_dir = self.project_path / "model"
         
         # Ensure model directory exists
@@ -36,6 +35,11 @@ class ProjectPlanManager:
         # Cache for loaded plans
         self._plans_cache: Dict[str, PlanContext] = {}
         self._load_all_plans()
+    
+    @property
+    def task_type(self) -> TaskType:
+        """Get the current task type from project config."""
+        return self.config.task_type
     
     def _load_all_plans(self):
         """Load all existing plans from model directory."""

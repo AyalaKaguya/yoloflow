@@ -62,8 +62,12 @@ def initialize_project(project: Project, datasets: list[DatasetInfo], models: li
             if not success:
                 continue
             
+        # 将模型添加到项目
         project.model_manager.add_pretrained_model(local_file, model.filename)
-    
+        
+        # 为选中模型创建计划
+        project.plan_manager.create_plan(f"训练 - {model.filename}", f"pretrain/{model.filename}")
+
     return project
 
 
