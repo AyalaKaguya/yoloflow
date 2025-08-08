@@ -91,11 +91,11 @@ class SplashScreen(QSplashScreen):
         self.message_label = QLabel(self)
         self.message_label.setStyleSheet("""
             QLabel {
-                background-color: rgba(0, 0, 0, 180);
                 color: white;
                 padding: 8px 12px;
-                border-radius: 4px;
                 font-size: 12px;
+                border: none;
+                background: transparent;
             }
         """)
         self.message_label.setText("正在启动...")

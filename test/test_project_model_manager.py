@@ -377,7 +377,7 @@ class TestProjectModelManager:
             assert manager.task_type == TaskType.DETECTION
             assert manager.pretrain_dir.exists()
             assert manager.model_dir.exists()
-            assert isinstance(manager.plan_manager, ProjectPlanManager)
+            # Plan manager is no longer part of model manager
     
     def test_get_pretrained_models(self):
         """Test getting pretrained models."""
@@ -511,30 +511,25 @@ class TestProjectModelManager:
             assert manager.get_pretrained_model_path("non_existent.pt") is None
             assert manager.get_trained_model_path("non_existent.pt") is None
     
-    def test_training_plan_integration(self):
-        """Test training plan management integration."""
+    def test_model_manager_basic_functionality(self):
+        """Test basic model manager functionality without plan integration."""
         with tempfile.TemporaryDirectory() as temp_dir:
             project_path = Path(temp_dir)
             config = create_test_config(project_path, TaskType.DETECTION)
             manager = ProjectModelManager(project_path, config)
             
-            # Create training plan
-            plan = manager.create_training_plan("test_plan", "yolo11n.pt")
-            assert plan.name == "test_plan"
+            # Test basic properties
+            assert manager.project_path == project_path
+            assert manager.task_type == TaskType.DETECTION
+            assert manager.config == config
             
-            # Get plan
-            retrieved_plan = manager.get_training_plan(plan.plan_id)
-            assert retrieved_plan is not None
-            assert retrieved_plan.name == "test_plan"
+            # Test directories exist
+            assert manager.pretrain_dir.exists()
+            assert manager.model_dir.exists()
             
-            # Get all plans
-            all_plans = manager.get_all_training_plans()
-            assert len(all_plans) == 1
-            
-            # Delete plan
-            success = manager.delete_training_plan(plan.plan_id)
-            assert success is True
-            assert len(manager.get_all_training_plans()) == 0
+            # Test empty lists initially
+            assert manager.get_pretrained_models() == []
+            assert manager.get_trained_models() == []
     
     def test_get_model_summary(self):
         """Test getting model summary."""
@@ -548,16 +543,11 @@ class TestProjectModelManager:
             (manager.pretrain_dir / "pretrained2.pt").touch()
             (manager.model_dir / "trained1.pt").touch()
             
-            # Create training plans
-            plan1 = manager.create_training_plan("plan1")
-            plan2 = manager.create_training_plan("plan2")
-            plan1.set_results(best_model="best.pt")
-            plan1.save()
-            
             summary = manager.get_model_summary()
             
             assert summary["pretrained_models"] == 2
             assert summary["trained_models"] == 1
-            assert summary["training_plans"] == 2
-            assert summary["completed_plans"] == 1
-            assert summary["pending_plans"] == 1
+            # No longer includes plan information
+            assert "training_plans" not in summary
+            assert "completed_plans" not in summary
+            assert "pending_plans" not in summary

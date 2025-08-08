@@ -6,8 +6,6 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
 from ..enums import TaskType
-from .plan_context import PlanContext
-from .project_plan_manager import ProjectPlanManager
 from .project_config import ProjectConfig
 
 
@@ -36,9 +34,6 @@ class ProjectModelManager:
         # Ensure directories exist
         self.pretrain_dir.mkdir(exist_ok=True)
         self.model_dir.mkdir(exist_ok=True)
-        
-        # Initialize plan manager
-        self.plan_manager = ProjectPlanManager(project_path, project_config)
     
     def get_pretrained_models(self) -> List[str]:
         """
@@ -131,40 +126,21 @@ class ProjectModelManager:
         model_path = self.model_dir / model_name
         return model_path if model_path.exists() else None
     
-    def create_training_plan(self, name: str, pretrained_model: Optional[str] = None) -> PlanContext:
-        """Create a new training plan."""
-        return self.plan_manager.create_plan(name, pretrained_model)
-    
-    def get_training_plan(self, plan_id: str) -> Optional[PlanContext]:
-        """Get training plan by ID."""
-        return self.plan_manager.get_plan(plan_id)
-    
-    def get_all_training_plans(self) -> List[PlanContext]:
-        """Get all training plans."""
-        return self.plan_manager.get_all_plans()
-    
-    def delete_training_plan(self, plan_id: str) -> bool:
-        """Delete a training plan."""
-        return self.plan_manager.delete_plan(plan_id)
-    
     def get_model_summary(self) -> Dict[str, Any]:
         """
-        Get summary of all models and plans.
+        Get summary of models (without plan information).
         
         Returns:
             Dictionary with model counts and information
         """
         return {
             "pretrained_models": len(self.get_pretrained_models()),
-            "trained_models": len(self.get_trained_models()),
-            "training_plans": self.plan_manager.get_plan_count(),
-            "completed_plans": len(self.plan_manager.get_plans_by_status(True)),
-            "pending_plans": len(self.plan_manager.get_plans_by_status(False))
+            "trained_models": len(self.get_trained_models())
         }
     
     def __str__(self) -> str:
         summary = self.get_model_summary()
-        return f"ProjectModelManager({summary['pretrained_models']} pretrained, {summary['training_plans']} plans)"
+        return f"ProjectModelManager({summary['pretrained_models']} pretrained, {summary['trained_models']} trained)"
     
     def __repr__(self) -> str:
         return self.__str__()

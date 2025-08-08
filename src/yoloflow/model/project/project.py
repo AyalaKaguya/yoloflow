@@ -8,11 +8,12 @@ import os
 import shutil
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, Union, List
+from typing import Optional, Union, List, Dict, Any
 
 from .project_config import ProjectConfig, TaskType
 from .dataset_manager import DatasetManager
 from .project_model_manager import ProjectModelManager
+from .project_plan_manager import ProjectPlanManager
 
 
 class Project:
@@ -58,6 +59,9 @@ class Project:
         
         # Initialize model manager
         self.model_manager = ProjectModelManager(self.project_path, self.config)
+        
+        # Initialize plan manager
+        self.plan_manager = ProjectPlanManager(self.project_path, self.config)
         
         # Validate project structure
         self._ensure_project_structure()
@@ -222,6 +226,26 @@ class Project:
     def save_config(self):
         """Save project configuration."""
         self.config.save()
+    
+    def get_project_summary(self) -> Dict[str, Any]:
+        """
+        Get comprehensive project summary including all managers.
+        
+        Returns:
+            Dictionary with project statistics
+        """
+        model_summary = self.model_manager.get_model_summary()
+        return {
+            "name": self.name,
+            "task_type": self.task_type.value,
+            "datasets": len(self.get_datasets()),
+            "pretrained_models": model_summary["pretrained_models"],
+            "trained_models": model_summary["trained_models"],
+            "training_plans": self.plan_manager.get_plan_count(),
+            "completed_plans": len(self.plan_manager.get_plans_by_status(True)),
+            "pending_plans": len(self.plan_manager.get_plans_by_status(False)),
+            "training_runs": len(self.get_training_runs())
+        }
     
     def delete(self, confirm: bool = False):
         """
