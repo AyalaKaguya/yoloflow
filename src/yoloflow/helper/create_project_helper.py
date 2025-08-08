@@ -3,6 +3,7 @@
 import os
 from pathlib import Path
 import sys
+from typing import Optional
 from ..model import Project, DatasetInfo, ModelInfo
 
 
@@ -34,7 +35,7 @@ GITHUB_ASSETS_NAMES = frozenset(
 )
 GITHUB_ASSETS_TAG = "v8.3.0"
 
-def initialize_project(project: Project, datasets: list[DatasetInfo], models: list[ModelInfo]) -> Project:
+def initialize_project(project: Project, datasets: list[DatasetInfo], models: list[ModelInfo], parent_widget=None) -> Project:
     """帮助快速的创建项目，并自动添加数据集和预训练模型"""
     for dataset in datasets:
         project.dataset_manager.import_dataset(
@@ -56,8 +57,54 @@ def initialize_project(project: Project, datasets: list[DatasetInfo], models: li
             # 下载预训练模型
             download_url = f"https://github.com/{GITHUB_ASSETS_REPO}/releases/download/{GITHUB_ASSETS_TAG}/{model.filename}"
             
-            
+            # 显示下载对话框
+            success = _download_model_with_dialog(download_url, local_file, model.filename, parent_widget)
+            if not success:
+                continue
             
         project.model_manager.add_pretrained_model(local_file, model.filename)
     
     return project
+
+
+def _download_model_with_dialog(download_url: str, output_path: Path, filename: str, parent_widget=None) -> bool:
+    """通过对话框下载模型"""
+    from ..ui import show_model_download_dialog
+    from PySide6.QtWidgets import QApplication
+    
+    download_success = False
+    download_error = ""
+    dialog_closed = False
+    
+    def on_download_completed(success: bool, message: str):
+        nonlocal download_success, download_error, dialog_closed
+        download_success = success
+        download_error = message
+        dialog_closed = True
+    
+    def on_download_cancelled():
+        nonlocal dialog_closed
+        dialog_closed = True
+    
+    # 显示下载对话框
+    dialog = show_model_download_dialog(
+        parent=parent_widget,
+        download_url=download_url,
+        output_path=output_path,
+        filename=filename,
+        title=f"下载模型 - {filename}",
+        on_completed=on_download_completed,
+        on_cancelled=on_download_cancelled
+    )
+    
+    # 等待对话框关闭
+    app = QApplication.instance()
+    if app:
+        while not dialog_closed:
+            app.processEvents()
+    
+    if not download_success and download_error:
+        from PySide6.QtWidgets import QMessageBox
+        QMessageBox.critical(parent_widget, "下载失败", f"模型下载失败: {download_error}")
+    
+    return download_success
