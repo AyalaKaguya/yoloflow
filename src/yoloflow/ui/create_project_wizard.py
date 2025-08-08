@@ -96,6 +96,9 @@ class CreateProjectWizard(QMainWindow):
         self._create_bottom_buttons()
         main_layout.addWidget(self.button_widget)
 
+        # 连接Tab切换信号
+        self.tab_widget.currentChanged.connect(self._on_tab_changed)
+
         # 初始状态
         self._update_button_state()
 
@@ -593,6 +596,14 @@ class CreateProjectWizard(QMainWindow):
         self.project_path = self.path_edit.text().strip()
         self._update_button_state()
 
+    def _on_tab_changed(self, index):
+        """Tab页面切换时的处理"""
+        # 如果切换到模型配置页面且之前没有更新过模型列表，则更新
+        if index == 3 and self.selected_task_type:  # 模型配置页面索引为3
+            self._update_model_list()
+        # 更新按钮状态
+        self._update_button_state()
+
     def _update_button_state(self):
         """更新按钮状态"""
         current_index = self.tab_widget.currentIndex()
@@ -632,7 +643,7 @@ class CreateProjectWizard(QMainWindow):
         current_index = self.tab_widget.currentIndex()
         if current_index > 0:
             self.tab_widget.setCurrentIndex(current_index - 1)
-            self._update_button_state()
+            # Tab切换会自动触发_on_tab_changed，无需再次调用_update_button_state
 
     def _next_step(self):
         """下一步或创建项目"""
@@ -644,10 +655,12 @@ class CreateProjectWizard(QMainWindow):
             self._create_project()
         else:
             # 进入下一步
-            if current_index == 0:  # 从项目类型进入项目信息
-                self._update_model_list()  # 更新模型列表
+            # 先验证当前页面是否可以进行下一步
+            if not self._can_proceed_to_next():
+                return
+                
             self.tab_widget.setCurrentIndex(current_index + 1)
-            self._update_button_state()
+            # Tab切换会自动触发_on_tab_changed，无需再次调用_update_button_state
 
     def _create_project(self):
         """创建项目"""
