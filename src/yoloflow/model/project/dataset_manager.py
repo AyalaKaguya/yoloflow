@@ -12,7 +12,7 @@ from enum import Enum
 
 from .project_config import ProjectConfig
 from .dataset_info import DatasetInfo
-from .dataset_type import DatasetType
+from ..enums import DatasetType
 
 
 

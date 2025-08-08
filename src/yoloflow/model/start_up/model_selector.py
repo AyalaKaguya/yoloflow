@@ -5,7 +5,7 @@ Model selection and management for YOLOFlow projects.
 from dataclasses import dataclass
 from enum import Enum
 from typing import Dict, List, Optional, Set, Any
-from .project_config import TaskType
+from ..enums import TaskType
 from .model_info import ModelInfo
 
 

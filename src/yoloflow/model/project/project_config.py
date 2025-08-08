@@ -4,7 +4,7 @@ Project configuration management for YOLOFlow projects.
 
 import json
 from datetime import datetime
-from .task_type import TaskType
+from ..enums import TaskType
 from pathlib import Path
 from typing import Dict, List, Optional, Any, Union
 

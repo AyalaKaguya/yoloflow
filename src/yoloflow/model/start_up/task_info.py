@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Any
-from .task_type import TaskType
+from ..enums import TaskType
 
 
 @dataclass

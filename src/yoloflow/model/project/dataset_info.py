@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from typing import Dict
-from .dataset_type import DatasetType
+from ..enums import DatasetType
 
 @dataclass
 class DatasetInfo:
