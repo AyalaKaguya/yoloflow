@@ -71,8 +71,12 @@ class CreateProjectWizard(QMainWindow):
         content_widget = QWidget()
         content_layout = QHBoxLayout(content_widget)
         content_layout.setContentsMargins(20, 20, 20, 20)
-        content_layout = QHBoxLayout(content_widget)
-        content_layout.setContentsMargins(20, 20, 20, 20)
+        content_widget.setStyleSheet("""
+            QWidget {
+                background: transparent;
+                color: #ffffff;
+            }
+        """)
         
         # Tab布局
         self.tab_widget = QTabWidget()
@@ -102,12 +106,13 @@ class CreateProjectWizard(QMainWindow):
         # 标题
         title = QLabel("选择项目类型")
         title.setFont(QFont("Arial", 16, QFont.Weight.Bold))
+        title.setStyleSheet("color: white; font-size: 16px; font-weight: bold; margin-bottom: 10px;")
         layout.addWidget(title)
         
         # 说明文字
-        description = QLabel("请选择您要创建的机器学习任务类型。不同的任务类型将影响可用的模型和配置选项。")
+        description = QLabel("请选择您要创建的深度学习任务类型。不同的任务类型将影响可用的模型和配置选项。")
         description.setWordWrap(True)
-        description.setStyleSheet("color: #666; margin-bottom: 20px;")
+        description.setStyleSheet("color: #aaa; margin-bottom: 20px; font-size: 12px;")
         layout.addWidget(description)
         
         # 滚动区域
@@ -140,13 +145,14 @@ class CreateProjectWizard(QMainWindow):
         """创建任务类型卡片"""
         card = QFrame()
         card.setFrameStyle(QFrame.Shape.Box)
-        card.setFixedSize(350, 120)
+        card.setFixedSize(300, 100)
         card.setStyleSheet("""
             QFrame {
-                border: 2px solid #ddd;
+                border: 2px solid #303030;
                 border-radius: 8px;
-                background-color: white;
-                padding: 10px;
+                background-color: #303030;
+                padding: 0px;
+                color: white;
             }
             QFrame:hover {
                 border-color: #007ACC;
@@ -160,11 +166,31 @@ class CreateProjectWizard(QMainWindow):
         radio = QRadioButton()
         # 使用自定义属性存储任务类型
         radio.setProperty("task_type", task_info.task_type)
+        radio.setStyleSheet("""
+            QRadioButton {
+                font-weight: bold;
+            }
+            QRadioButton::indicator {
+                width: 18px;
+                height: 18px;
+            }
+            QRadioButton::indicator:unchecked {
+                border: 2px solid #ddd;
+                background-color: transparent;
+                border-radius: 9px;
+            }
+            QRadioButton::indicator:checked {
+                border: 2px solid #007ACC;
+                background-color: #007ACC;
+                border-radius: 9px;
+            }
+        """)
         self.task_button_group.addButton(radio)
         
         title = QLabel(task_info.name)
         title.setFont(QFont("Arial", 12, QFont.Weight.Bold))
-        
+        title.setStyleSheet("color: white; font-weight: bold; border: none;")
+
         header_layout.addWidget(radio)
         header_layout.addWidget(title)
         header_layout.addStretch()
@@ -174,7 +200,7 @@ class CreateProjectWizard(QMainWindow):
         # 描述文字
         desc = QLabel(task_info.description)
         desc.setWordWrap(True)
-        desc.setStyleSheet("color: #666; font-size: 10px;")
+        desc.setStyleSheet("color: #aaa; font-size: 12px; border: none;")
         layout.addWidget(desc)
         
         # 点击卡片选中单选按钮
@@ -196,6 +222,7 @@ class CreateProjectWizard(QMainWindow):
         # 标题
         title = QLabel("项目信息")
         title.setFont(QFont("Arial", 16, QFont.Weight.Bold))
+        title.setStyleSheet("color: white; font-size: 16px; font-weight: bold; margin-bottom: 10px;")
         layout.addWidget(title)
         
         # 表单布局
@@ -223,6 +250,19 @@ class CreateProjectWizard(QMainWindow):
         
         browse_button = QPushButton("浏览...")
         browse_button.clicked.connect(self._browse_project_path)
+        browse_button.setStyleSheet("""
+            QPushButton {
+                background-color: #007ACC;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                padding: 8px 16px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #005999;
+            }
+        """)
         
         path_layout.addWidget(self.path_edit)
         path_layout.addWidget(browse_button)
@@ -243,16 +283,30 @@ class CreateProjectWizard(QMainWindow):
         # 标题
         title = QLabel("数据集配置")
         title.setFont(QFont("Arial", 16, QFont.Weight.Bold))
+        title.setStyleSheet("color: white; font-size: 16px; font-weight: bold; margin-bottom: 10px;")
         layout.addWidget(title)
         
         # 说明文字
         description = QLabel("配置项目将要使用的数据集。您可以稍后在项目中添加更多数据集。")
-        description.setStyleSheet("color: #666; margin-bottom: 20px;")
+        description.setStyleSheet("color: #aaa; margin-bottom: 20px; font-size: 12px;")
         layout.addWidget(description)
         
         # 添加按钮
         add_button = QPushButton("添加数据集")
         add_button.clicked.connect(self._add_dataset)
+        add_button.setStyleSheet("""
+            QPushButton {
+                background-color: #007ACC;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                padding: 8px 16px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #005999;
+            }
+        """)
         layout.addWidget(add_button)
         
         # 数据集表格
@@ -280,11 +334,12 @@ class CreateProjectWizard(QMainWindow):
         # 标题
         title = QLabel("模型配置")
         title.setFont(QFont("Arial", 16, QFont.Weight.Bold))
+        title.setStyleSheet("color: white; font-size: 16px; font-weight: bold; margin-bottom: 10px;")
         layout.addWidget(title)
         
         # 说明文字
-        description = QLabel("选择适合您任务类型的预训练模型。您可以选择多个模型进行比较。")
-        description.setStyleSheet("color: #666; margin-bottom: 20px;")
+        description = QLabel("选择适合您任务类型的预训练模型。您可以在之后选择多个模型进行比较。")
+        description.setStyleSheet("color: #aaa; margin-bottom: 20px; font-size: 12px;")
         layout.addWidget(description)
         
         # 模型列表将根据选择的任务类型动态更新
@@ -323,12 +378,17 @@ class CreateProjectWizard(QMainWindow):
         layout.addWidget(self.next_button)
         
     def _setup_styles(self):
-        """设置样式"""
+        """设置样式 - 为每个组件单独设置样式"""
+        # 主窗口样式
         self.setStyleSheet("""
             QMainWindow {
                 background-color: #2b2b2b;
                 color: white;
             }
+        """)
+        
+        # Tab控件样式
+        self.tab_widget.setStyleSheet("""
             QTabWidget::pane {
                 border: 1px solid #555;
                 background-color: #3a3a3a;
@@ -342,13 +402,10 @@ class CreateProjectWizard(QMainWindow):
             QTabBar::tab:selected {
                 background-color: #007ACC;
             }
-            QLineEdit, QTextEdit {
-                background-color: white;
-                color: black;
-                border: 2px solid #ddd;
-                border-radius: 4px;
-                padding: 5px;
-            }
+        """)
+        
+        # 按钮样式
+        button_style = """
             QPushButton {
                 background-color: #007ACC;
                 color: white;
@@ -363,9 +420,32 @@ class CreateProjectWizard(QMainWindow):
             QPushButton:disabled {
                 background-color: #666;
             }
+        """
+        
+        # 应用按钮样式
+        self.cancel_button.setStyleSheet(button_style)
+        self.prev_button.setStyleSheet(button_style)
+        self.next_button.setStyleSheet(button_style)
+        
+        # 输入框样式
+        input_style = """
+            background-color: #363636;
+            color: white;
+            border: 2px solid #999;
+            border-radius: 4px;
+            padding: 5px;
+        """
+        
+        # 应用输入框样式
+        self.name_edit.setStyleSheet(input_style)
+        self.description_edit.setStyleSheet(input_style)
+        self.path_edit.setStyleSheet(input_style)
+        
+        # 表格样式
+        self.dataset_table.setStyleSheet("""
             QTableWidget {
-                background-color: white;
-                color: black;
+                background-color: #363636;
+                color: white;
                 gridline-color: #ddd;
             }
         """)
@@ -406,6 +486,19 @@ class CreateProjectWizard(QMainWindow):
             # 删除按钮
             delete_button = QPushButton("删除")
             delete_button.clicked.connect(lambda checked, r=row: self._remove_dataset(r))
+            delete_button.setStyleSheet("""
+                QPushButton {
+                    background-color: #dc3545;
+                    color: white;
+                    border: none;
+                    border-radius: 4px;
+                    padding: 5px 10px;
+                    font-weight: bold;
+                }
+                QPushButton:hover {
+                    background-color: #c82333;
+                }
+            """)
             self.dataset_table.setCellWidget(row, 3, delete_button)
             
     def _remove_dataset(self, row: int):
@@ -428,7 +521,27 @@ class CreateProjectWizard(QMainWindow):
         
         for model in models:
             checkbox = QRadioButton(f"{model.name} ({model.parameters})")
-            checkbox.setStyleSheet("color: white; padding: 5px;")
+            checkbox.setStyleSheet("""
+                QRadioButton {
+                    color: white;
+                    padding: 5px;
+                    font-weight: bold;
+                }
+                QRadioButton::indicator {
+                    width: 18px;
+                    height: 18px;
+                }
+                QRadioButton::indicator:unchecked {
+                    border: 2px solid #ddd;
+                    background-color: #2b2b2b;
+                    border-radius: 9px;
+                }
+                QRadioButton::indicator:checked {
+                    border: 2px solid #007ACC;
+                    background-color: #007ACC;
+                    border-radius: 9px;
+                }
+            """)
             # 使用自定义属性存储模型文件名
             checkbox.setProperty("model_filename", model.filename)
             

@@ -301,7 +301,6 @@ class ProjectManagerWindow(QMainWindow):
             try:
                 # 尝试打开项目
                 project = self.project_manager.open_project(project_dir)
-                QMessageBox.information(self, "成功", f"已打开项目: {project.name}")
                 self._load_recent_projects()  # 刷新最近项目列表
                 
                 # TODO: 这里之后会打开项目主界面
