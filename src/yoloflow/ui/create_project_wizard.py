@@ -20,6 +20,7 @@ from PySide6.QtGui import QFont, QPalette, QColor
 from ..model.enums import TaskType, DatasetType
 from ..model.start_up import TaskTypeProvider, ModelSelector
 from ..model.project import DatasetInfo
+from .components import CustomTitleBar
 from ..__version__ import __version__
 
 
@@ -47,11 +48,11 @@ class CreateProjectWizard(QMainWindow):
         
     def _setup_ui(self):
         """设置界面"""
-        # 设置窗口属性 - 作为独立窗口
+        # 设置窗口属性 - 作为独立窗口但使用自定义标题栏
         self.setWindowTitle("创建新项目 - YOLOFlow")
         self.setFixedSize(800, 600)
-        # 移除 FramelessWindowHint，使其成为真正的独立窗口
-        self.setWindowFlags(Qt.WindowType.Window | Qt.WindowType.WindowCloseButtonHint | Qt.WindowType.WindowMinimizeButtonHint)
+        # 使用无框窗口但保持独立性
+        self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.Window)
         
         # 创建中央控件
         central_widget = QWidget()
@@ -59,10 +60,17 @@ class CreateProjectWizard(QMainWindow):
         
         # 主布局
         main_layout = QVBoxLayout(central_widget)
-        main_layout.setContentsMargins(10, 10, 10, 10)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        
+        # 自定义标题栏
+        self.title_bar = CustomTitleBar(self, "创建新项目")
+        self.title_bar.close_clicked.connect(self.close)
+        main_layout.addWidget(self.title_bar)
         
         # 内容区域
         content_widget = QWidget()
+        content_layout = QHBoxLayout(content_widget)
+        content_layout.setContentsMargins(20, 20, 20, 20)
         content_layout = QHBoxLayout(content_widget)
         content_layout.setContentsMargins(20, 20, 20, 20)
         
@@ -317,7 +325,7 @@ class CreateProjectWizard(QMainWindow):
     def _setup_styles(self):
         """设置样式"""
         self.setStyleSheet("""
-            QDialog {
+            QMainWindow {
                 background-color: #2b2b2b;
                 color: white;
             }
