@@ -7,6 +7,7 @@ from typing import Dict, List, Optional
 
 from ..enums import TaskType
 from .plan_context import PlanContext
+from .project_config import ProjectConfig
 
 
 class ProjectPlanManager:
@@ -16,16 +17,17 @@ class ProjectPlanManager:
     Handles creation, loading, and management of training plans.
     """
     
-    def __init__(self, project_path: Path, task_type: TaskType):
+    def __init__(self, project_path: Path, project_config: ProjectConfig):
         """
         Initialize plan manager.
         
         Args:
             project_path: Path to the project directory
-            task_type: Project task type
+            project_config: Project configuration instance
         """
         self.project_path = Path(project_path)
-        self.task_type = task_type
+        self.config = project_config
+        self.task_type = project_config.task_type
         self.model_dir = self.project_path / "model"
         
         # Ensure model directory exists

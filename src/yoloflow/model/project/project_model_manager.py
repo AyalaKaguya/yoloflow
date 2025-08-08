@@ -8,6 +8,7 @@ from typing import Any, Dict, List, Optional, Union
 from ..enums import TaskType
 from .plan_context import PlanContext
 from .project_plan_manager import ProjectPlanManager
+from .project_config import ProjectConfig
 
 
 class ProjectModelManager:
@@ -18,16 +19,17 @@ class ProjectModelManager:
     training plans through the ProjectPlanManager.
     """
     
-    def __init__(self, project_path: Path, task_type: TaskType):
+    def __init__(self, project_path: Path, project_config: ProjectConfig):
         """
         Initialize project model manager.
         
         Args:
             project_path: Path to the project directory
-            task_type: Project task type
+            project_config: Project configuration instance
         """
         self.project_path = Path(project_path)
-        self.task_type = task_type
+        self.config = project_config
+        self.task_type = project_config.task_type
         self.pretrain_dir = self.project_path / "pretrain"
         self.model_dir = self.project_path / "model"
         
@@ -36,7 +38,7 @@ class ProjectModelManager:
         self.model_dir.mkdir(exist_ok=True)
         
         # Initialize plan manager
-        self.plan_manager = ProjectPlanManager(project_path, task_type)
+        self.plan_manager = ProjectPlanManager(project_path, project_config)
     
     def get_pretrained_models(self) -> List[str]:
         """

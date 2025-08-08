@@ -19,6 +19,17 @@ from yoloflow.model import (
     TrainingResults,
     TaskType
 )
+from yoloflow.model.project import ProjectConfig
+
+
+def create_test_config(project_path: Path, task_type: TaskType = TaskType.DETECTION) -> ProjectConfig:
+    """Create a test project configuration."""
+    config_path = project_path / "yoloflow.toml"
+    config = ProjectConfig(config_path)
+    config.project_name = "Test Project"
+    config.task_type = task_type
+    config.description = "Test project"
+    return config
 
 
 class TestDatasetConfig:
@@ -242,7 +253,8 @@ class TestProjectPlanManager:
         """Test creating plan manager."""
         with tempfile.TemporaryDirectory() as temp_dir:
             project_path = Path(temp_dir)
-            manager = ProjectPlanManager(project_path, TaskType.DETECTION)
+            config = create_test_config(project_path, TaskType.DETECTION)
+            manager = ProjectPlanManager(project_path, config)
             
             assert manager.project_path == project_path
             assert manager.task_type == TaskType.DETECTION
@@ -252,7 +264,8 @@ class TestProjectPlanManager:
         """Test creating a plan."""
         with tempfile.TemporaryDirectory() as temp_dir:
             project_path = Path(temp_dir)
-            manager = ProjectPlanManager(project_path, TaskType.DETECTION)
+            config = create_test_config(project_path, TaskType.DETECTION)
+            manager = ProjectPlanManager(project_path, config)
             
             plan = manager.create_plan("test_plan", "yolo11n.pt")
             
@@ -264,7 +277,8 @@ class TestProjectPlanManager:
         """Test creating plan with duplicate name."""
         with tempfile.TemporaryDirectory() as temp_dir:
             project_path = Path(temp_dir)
-            manager = ProjectPlanManager(project_path, TaskType.DETECTION)
+            config = create_test_config(project_path, TaskType.DETECTION)
+            manager = ProjectPlanManager(project_path, config)
             
             manager.create_plan("test_plan")
             
@@ -275,7 +289,8 @@ class TestProjectPlanManager:
         """Test getting plan by ID and name."""
         with tempfile.TemporaryDirectory() as temp_dir:
             project_path = Path(temp_dir)
-            manager = ProjectPlanManager(project_path, TaskType.DETECTION)
+            config = create_test_config(project_path, TaskType.DETECTION)
+            manager = ProjectPlanManager(project_path, config)
             
             plan = manager.create_plan("test_plan")
             
@@ -293,7 +308,8 @@ class TestProjectPlanManager:
         """Test deleting a plan."""
         with tempfile.TemporaryDirectory() as temp_dir:
             project_path = Path(temp_dir)
-            manager = ProjectPlanManager(project_path, TaskType.DETECTION)
+            config = create_test_config(project_path, TaskType.DETECTION)
+            manager = ProjectPlanManager(project_path, config)
             
             plan = manager.create_plan("test_plan")
             plan_id = plan.plan_id
@@ -309,7 +325,8 @@ class TestProjectPlanManager:
         """Test getting plans by result status."""
         with tempfile.TemporaryDirectory() as temp_dir:
             project_path = Path(temp_dir)
-            manager = ProjectPlanManager(project_path, TaskType.DETECTION)
+            config = create_test_config(project_path, TaskType.DETECTION)
+            manager = ProjectPlanManager(project_path, config)
             
             # Create plans
             plan1 = manager.create_plan("plan1")
@@ -331,7 +348,8 @@ class TestProjectPlanManager:
         """Test searching plans by name."""
         with tempfile.TemporaryDirectory() as temp_dir:
             project_path = Path(temp_dir)
-            manager = ProjectPlanManager(project_path, TaskType.DETECTION)
+            config = create_test_config(project_path, TaskType.DETECTION)
+            manager = ProjectPlanManager(project_path, config)
             
             manager.create_plan("detection_plan")
             manager.create_plan("classification_plan")
@@ -352,7 +370,8 @@ class TestProjectModelManager:
         """Test creating model manager."""
         with tempfile.TemporaryDirectory() as temp_dir:
             project_path = Path(temp_dir)
-            manager = ProjectModelManager(project_path, TaskType.DETECTION)
+            config = create_test_config(project_path, TaskType.DETECTION)
+            manager = ProjectModelManager(project_path, config)
             
             assert manager.project_path == project_path
             assert manager.task_type == TaskType.DETECTION
@@ -364,7 +383,8 @@ class TestProjectModelManager:
         """Test getting pretrained models."""
         with tempfile.TemporaryDirectory() as temp_dir:
             project_path = Path(temp_dir)
-            manager = ProjectModelManager(project_path, TaskType.DETECTION)
+            config = create_test_config(project_path, TaskType.DETECTION)
+            manager = ProjectModelManager(project_path, config)
             
             # Create fake model files
             (manager.pretrain_dir / "yolo11n.pt").touch()
@@ -381,7 +401,8 @@ class TestProjectModelManager:
         """Test getting trained models."""
         with tempfile.TemporaryDirectory() as temp_dir:
             project_path = Path(temp_dir)
-            manager = ProjectModelManager(project_path, TaskType.DETECTION)
+            config = create_test_config(project_path, TaskType.DETECTION)
+            manager = ProjectModelManager(project_path, config)
             
             # Create fake model files
             (manager.model_dir / "best.pt").touch()
@@ -396,7 +417,8 @@ class TestProjectModelManager:
         """Test adding pretrained model."""
         with tempfile.TemporaryDirectory() as temp_dir:
             project_path = Path(temp_dir)
-            manager = ProjectModelManager(project_path, TaskType.DETECTION)
+            config = create_test_config(project_path, TaskType.DETECTION)
+            manager = ProjectModelManager(project_path, config)
             
             # Create source model file
             source_file = Path(temp_dir) / "source_model.pt"
@@ -415,7 +437,8 @@ class TestProjectModelManager:
         """Test adding pretrained model with custom name."""
         with tempfile.TemporaryDirectory() as temp_dir:
             project_path = Path(temp_dir)
-            manager = ProjectModelManager(project_path, TaskType.DETECTION)
+            config = create_test_config(project_path, TaskType.DETECTION)
+            manager = ProjectModelManager(project_path, config)
             
             # Create source model file
             source_file = Path(temp_dir) / "source_model.pt"
@@ -433,7 +456,8 @@ class TestProjectModelManager:
         """Test adding duplicate pretrained model."""
         with tempfile.TemporaryDirectory() as temp_dir:
             project_path = Path(temp_dir)
-            manager = ProjectModelManager(project_path, TaskType.DETECTION)
+            config = create_test_config(project_path, TaskType.DETECTION)
+            manager = ProjectModelManager(project_path, config)
             
             # Create existing model
             (manager.pretrain_dir / "existing.pt").touch()
@@ -450,7 +474,8 @@ class TestProjectModelManager:
         """Test removing pretrained model."""
         with tempfile.TemporaryDirectory() as temp_dir:
             project_path = Path(temp_dir)
-            manager = ProjectModelManager(project_path, TaskType.DETECTION)
+            config = create_test_config(project_path, TaskType.DETECTION)
+            manager = ProjectModelManager(project_path, config)
             
             # Create model file
             model_file = manager.pretrain_dir / "test_model.pt"
@@ -469,7 +494,8 @@ class TestProjectModelManager:
         """Test getting model file paths."""
         with tempfile.TemporaryDirectory() as temp_dir:
             project_path = Path(temp_dir)
-            manager = ProjectModelManager(project_path, TaskType.DETECTION)
+            config = create_test_config(project_path, TaskType.DETECTION)
+            manager = ProjectModelManager(project_path, config)
             
             # Create model files
             pretrained_file = manager.pretrain_dir / "pretrained.pt"
@@ -489,7 +515,8 @@ class TestProjectModelManager:
         """Test training plan management integration."""
         with tempfile.TemporaryDirectory() as temp_dir:
             project_path = Path(temp_dir)
-            manager = ProjectModelManager(project_path, TaskType.DETECTION)
+            config = create_test_config(project_path, TaskType.DETECTION)
+            manager = ProjectModelManager(project_path, config)
             
             # Create training plan
             plan = manager.create_training_plan("test_plan", "yolo11n.pt")
@@ -513,7 +540,8 @@ class TestProjectModelManager:
         """Test getting model summary."""
         with tempfile.TemporaryDirectory() as temp_dir:
             project_path = Path(temp_dir)
-            manager = ProjectModelManager(project_path, TaskType.DETECTION)
+            config = create_test_config(project_path, TaskType.DETECTION)
+            manager = ProjectModelManager(project_path, config)
             
             # Create model files
             (manager.pretrain_dir / "pretrained1.pt").touch()

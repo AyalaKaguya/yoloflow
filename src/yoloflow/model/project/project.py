@@ -12,6 +12,7 @@ from typing import Optional, Union, List
 
 from .project_config import ProjectConfig, TaskType
 from .dataset_manager import DatasetManager
+from .project_model_manager import ProjectModelManager
 
 
 class Project:
@@ -54,6 +55,9 @@ class Project:
         
         # Initialize dataset manager
         self.dataset_manager = DatasetManager(self.config, self.project_path)
+        
+        # Initialize model manager
+        self.model_manager = ProjectModelManager(self.project_path, self.config)
         
         # Validate project structure
         self._ensure_project_structure()
@@ -190,12 +194,7 @@ class Project:
         Returns:
             list: List of model file names
         """
-        models = []
-        if self.model_dir.exists():
-            for item in self.model_dir.iterdir():
-                if item.is_file() and item.suffix in ['.pt', '.pth', '.onnx']:
-                    models.append(item.name)
-        return sorted(models)
+        return self.model_manager.get_trained_models()
     
     def get_pretrained_models(self) -> List[str]:
         """
@@ -204,12 +203,7 @@ class Project:
         Returns:
             list: List of pretrained model file names
         """
-        models = []
-        if self.pretrain_dir.exists():
-            for item in self.pretrain_dir.iterdir():
-                if item.is_file() and item.suffix in ['.pt', '.pth']:
-                    models.append(item.name)
-        return sorted(models)
+        return self.model_manager.get_pretrained_models()
     
     def get_training_runs(self) -> List[str]:
         """
