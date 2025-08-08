@@ -22,6 +22,7 @@ from ..model import TaskType
 from ..__version__ import __version__
 from .components import CustomTitleBar, RecentProjectItem
 from .project_delete_window import ProjectDeleteWindow
+from .create_project_wizard import CreateProjectWizard
 
 
 
@@ -257,8 +258,36 @@ class ProjectManagerWindow(QMainWindow):
     
     def _create_new_project(self):
         """创建新项目"""
-        # TODO: 这里之后会打开创建新项目的对话框
-        QMessageBox.information(self, "提示", "创建新项目功能将在下一步实现")
+        # 创建独立的向导窗口，不设置父窗口以确保完全独立
+        self.wizard = CreateProjectWizard()
+        self.wizard.project_created.connect(self._on_project_created)
+        self.wizard.show()  # 显示独立窗口
+        
+    def _on_project_created(self, project_path: str):
+        """项目创建完成后的处理"""
+        try:
+            # 项目已经被向导创建，我们只需要记录到数据库
+            from pathlib import Path
+            from ..model.project import Project
+            
+            # 加载新创建的项目以获取信息
+            project = Project(project_path)
+            
+            # 记录项目到数据库（手动插入，因为create_project会重复创建）
+            now = datetime.now().isoformat()
+            self.project_manager._get_connection().execute(
+                "INSERT INTO projects (name, path, task_type, description, created_at, last_opened) VALUES (?, ?, ?, ?, ?, ?)",
+                (project.name, str(project.project_path), project.task_type.value, project.description, now, now)
+            ).connection.commit()
+            
+            # 刷新最近项目列表
+            self._load_recent_projects()
+            
+            # 显示成功消息
+            QMessageBox.information(self, "成功", f"项目 '{project.name}' 创建成功！")
+            
+        except Exception as e:
+            QMessageBox.critical(self, "错误", f"处理新创建的项目时发生错误：{str(e)}")
     
     def _open_existing_project(self):
         """打开已有项目"""
