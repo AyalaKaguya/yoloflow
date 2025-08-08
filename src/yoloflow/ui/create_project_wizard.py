@@ -287,7 +287,7 @@ class CreateProjectWizard(QMainWindow):
         layout.addWidget(title)
         
         # 说明文字
-        description = QLabel("配置项目将要使用的数据集。您可以稍后在项目中添加更多数据集。")
+        description = QLabel("配置项目将要使用的数据集。您也可以稍后添加。")
         description.setStyleSheet("color: #aaa; margin-bottom: 20px; font-size: 12px;")
         layout.addWidget(description)
         
@@ -724,9 +724,9 @@ class DatasetConfigDialog(QDialog):
                 color: white;
             }
             QLineEdit, QTextEdit, QComboBox {
-                background-color: white;
-                color: black;
-                border: 2px solid #ddd;
+                background-color: #363636;
+                color: white;
+                border: 2px solid #999;
                 border-radius: 4px;
                 padding: 5px;
             }
@@ -741,6 +741,7 @@ class DatasetConfigDialog(QDialog):
             QPushButton:hover {
                 background-color: #005999;
             }
+            color: white;
         """)
         
     def _validate_and_accept(self):
