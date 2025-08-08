@@ -105,7 +105,8 @@ class ModelDownloadDialog(QDialog):
     def __init__(self, parent=None, title="下载模型"):
         super().__init__(parent)
         self.setWindowFlags(Qt.WindowType.Dialog | Qt.WindowType.FramelessWindowHint)
-        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        # 移除透明背景设置，以确保标题栏样式正常显示
+        # self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setModal(True)
         
         self.download_worker: Optional[DownloadWorker] = None
