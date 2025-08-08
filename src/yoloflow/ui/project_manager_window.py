@@ -265,30 +265,16 @@ class ProjectManagerWindow(QMainWindow):
         self.wizard.project_created.connect(self._on_project_created)
         self.wizard.show()  # 显示独立窗口
 
-    def _on_project_created(self, project_path: str):
+    def _on_project_created(self, project_dir: str):
         """项目创建完成后的处理"""
         try:
-            # 项目已经被向导创建，我们只需要记录到数据库
-            from pathlib import Path
-            from ..model.project import Project
+            # 尝试打开项目
+            project = self.project_manager.open_project(project_dir)
+            self._load_recent_projects()  # 刷新最近项目列表
 
-            # 加载新创建的项目以获取信息
-            project = Project(project_path)
+            # TODO: 这里之后会打开项目主界面
 
-            # 记录项目到数据库（手动插入，因为create_project会重复创建）
-            now = datetime.now().isoformat()
-            self.project_manager._get_connection().execute(
-                "INSERT INTO projects (name, path, task_type, description, created_at, last_opened) VALUES (?, ?, ?, ?, ?, ?)",
-                (project.name, str(project.project_path),
-                 project.task_type.value, project.description, now, now)
-            ).connection.commit()
-
-            # 刷新最近项目列表
-            self._load_recent_projects()
-
-            # 显示成功消息
-            QMessageBox.information(self, "成功", f"项目 '{project.name}' 创建成功！")
-
+            self.close()
         except Exception as e:
             QMessageBox.critical(self, "错误", f"处理新创建的项目时发生错误：{str(e)}")
 
@@ -308,6 +294,7 @@ class ProjectManagerWindow(QMainWindow):
 
                 # TODO: 这里之后会打开项目主界面
 
+                self.close()
             except Exception as e:
                 QMessageBox.critical(self, "错误", f"打开项目失败: {str(e)}")
 
@@ -341,11 +328,11 @@ class ProjectManagerWindow(QMainWindow):
         """从列表中打开项目"""
         try:
             project = self.project_manager.open_project(project_path)
-            QMessageBox.information(self, "成功", f"已打开项目: {project.name}")
             self._load_recent_projects()  # 刷新最近项目列表
 
             # TODO: 这里之后会打开项目主界面
 
+            self.close()
         except Exception as e:
             QMessageBox.critical(self, "错误", f"打开项目失败: {str(e)}")
 
@@ -355,18 +342,3 @@ class ProjectManagerWindow(QMainWindow):
         event.accept()
 
 
-def show_project_manager():
-    """显示项目管理器界面的便利函数"""
-    app = QApplication.instance()
-    if app is None:
-        app = QApplication(sys.argv)
-
-    window = ProjectManagerWindow()
-    window.show()
-
-    return app, window
-
-
-if __name__ == "__main__":
-    app, window = show_project_manager()
-    sys.exit(app.exec())

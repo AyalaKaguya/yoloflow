@@ -1,16 +1,16 @@
 [project]
-name = "TEST"
-task_type = "keypoint"
-created_at = "2025-08-08T11:43:00.059289"
-description = ""
+name = "test"
+task_type = "instance_segmentation"
+created_at = "2025-08-08T14:51:35.555649"
+description = "testtesttesttesttest"
 
 [datasets]
 available = [
-    "钉子",
+    "test",
 ]
 current = ""
 detailed = [
-    { name = "钉子", path = "dataset/钉子", type = "keypoint", description = "" },
+    { name = "test", path = "dataset/test", type = "instance_segmentation", description = "" },
 ]
 
 [models]

@@ -1,0 +1,63 @@
+
+
+import os
+from pathlib import Path
+import sys
+from ..model import Project, DatasetInfo, ModelInfo
+
+
+GITHUB_ASSETS_REPO = "ultralytics/assets"
+GITHUB_ASSETS_NAMES = frozenset(
+    [f"yolov8{k}{suffix}.pt" for k in "nsmlx" for suffix in ("", "-cls", "-seg", "-pose", "-obb", "-oiv7")]
+    + [f"yolo11{k}{suffix}.pt" for k in "nsmlx" for suffix in ("", "-cls", "-seg", "-pose", "-obb")]
+    + [f"yolo12{k}{suffix}.pt" for k in "nsmlx" for suffix in ("",)]  # detect models only currently
+    + [f"yolov5{k}{resolution}u.pt" for k in "nsmlx" for resolution in ("", "6")]
+    + [f"yolov3{k}u.pt" for k in ("", "-spp", "-tiny")]
+    + [f"yolov8{k}-world.pt" for k in "smlx"]
+    + [f"yolov8{k}-worldv2.pt" for k in "smlx"]
+    + [f"yoloe-v8{k}{suffix}.pt" for k in "sml" for suffix in ("-seg", "-seg-pf")]
+    + [f"yoloe-11{k}{suffix}.pt" for k in "sml" for suffix in ("-seg", "-seg-pf")]
+    + [f"yolov9{k}.pt" for k in "tsmce"]
+    + [f"yolov10{k}.pt" for k in "nsmblx"]
+    + [f"yolo_nas_{k}.pt" for k in "sml"]
+    + [f"sam_{k}.pt" for k in "bl"]
+    + [f"sam2_{k}.pt" for k in "blst"]
+    + [f"sam2.1_{k}.pt" for k in "blst"]
+    + [f"FastSAM-{k}.pt" for k in "sx"]
+    + [f"rtdetr-{k}.pt" for k in "lx"]
+    + [
+        "mobile_sam.pt",
+        "mobileclip_blt.ts",
+        "yolo11n-grayscale.pt",
+        "calibration_image_sample_data_20x128x128x3_float32.npy.zip",
+    ]
+)
+GITHUB_ASSETS_TAG = "v8.3.0"
+
+def initialize_project(project: Project, datasets: list[DatasetInfo], models: list[ModelInfo]) -> Project:
+    """帮助快速的创建项目，并自动添加数据集和预训练模型"""
+    for dataset in datasets:
+        project.dataset_manager.import_dataset(
+            source_path=dataset.path,
+            dataset_name=dataset.name,
+            dataset_type=dataset.dataset_type,
+            description=dataset.description
+        )
+    
+    for model in models:
+        # 先检查本地是否有缓存
+        local_file = Path.cwd().joinpath('pretrained').joinpath(model.filename)
+        if not local_file.exists():
+            if model.filename not in GITHUB_ASSETS_NAMES:
+                # 既不是预定义的模型，也不是可以下载到的模型，报错并跳过
+                from PySide6.QtWidgets import QMessageBox
+                QMessageBox.critical(None, "错误", f"无法找到模型文件，已跳过: {model.filename}")
+                continue
+            # 下载预训练模型
+            download_url = f"https://github.com/{GITHUB_ASSETS_REPO}/releases/download/{GITHUB_ASSETS_TAG}/{model.filename}"
+            
+            
+            
+        project.model_manager.add_pretrained_model(local_file, model.filename)
+    
+    return project
