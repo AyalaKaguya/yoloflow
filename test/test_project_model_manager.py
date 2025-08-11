@@ -429,7 +429,7 @@ class TestProjectModelManager:
                 source_path=source_file,
                 model_name="Test Model",
                 description="A test model",
-                parameters=2600000
+                parameters="2600000"
             )
             assert model_name == "source_model.pt"
             
@@ -443,7 +443,7 @@ class TestProjectModelManager:
             assert model_info is not None
             assert model_info.name == "Test Model"
             assert model_info.description == "A test model"
-            assert model_info.parameters == 2600000
+            assert model_info.parameters == "2600000"
     
     def test_add_pretrained_model_custom_name(self):
         """Test adding pretrained model with custom name."""
@@ -592,7 +592,7 @@ class TestNewModelManagerAPI:
                 plan_name="Test Plan",
                 model_name="Trained YOLO11",
                 description="Model trained on custom dataset",
-                parameters=2600000
+                parameters="2600000"
             )
             assert model_name == "trained_model.pt"
             
@@ -606,7 +606,7 @@ class TestNewModelManagerAPI:
             assert model_info is not None
             assert model_info.name == "Trained YOLO11"
             assert model_info.source == "plan_created"
-            assert model_info.parameters == 2600000
+            assert model_info.parameters == "2600000"
     
     def test_add_model_from_info(self):
         """Test adding model using ProjectModelInfo."""
@@ -625,7 +625,7 @@ class TestNewModelManagerAPI:
                 name="Custom YOLO Model",
                 filename="custom_yolo.pt",
                 description="A custom trained model",
-                parameters=5000000,
+                parameters="5000000",
                 task_type=TaskType.DETECTION,
                 source="plan_created"
             )
@@ -642,7 +642,7 @@ class TestNewModelManagerAPI:
             saved_info = config.get_model_info("custom_yolo.pt")
             assert saved_info is not None
             assert saved_info.name == "Custom YOLO Model"
-            assert saved_info.parameters == 5000000
+            assert saved_info.parameters == "5000000"
     
     def test_enhanced_model_summary(self):
         """Test the enhanced model summary with detailed info."""
@@ -657,7 +657,7 @@ class TestNewModelManagerAPI:
             manager.add_pretrained_model(
                 source_path=source_file1,
                 model_name="YOLO11n",
-                parameters=2600000
+                parameters="2600000"
             )
             
             # Add trained model
@@ -667,7 +667,7 @@ class TestNewModelManagerAPI:
                 source_path=source_file2,
                 plan_name="Training Plan",
                 model_name="Custom Trained Model",
-                parameters=2700000
+                parameters="2700000"
             )
             
             # Get summary
@@ -684,6 +684,6 @@ class TestNewModelManagerAPI:
             trained_detail = next(m for m in model_details if m["source"] == "plan_created")
             
             assert pretrained_detail["name"] == "YOLO11n"
-            assert pretrained_detail["parameters"] == 2600000
+            assert pretrained_detail["parameters"] == "2600000"
             assert trained_detail["name"] == "Custom Trained Model"
-            assert trained_detail["parameters"] == 2700000
+            assert trained_detail["parameters"] == "2700000"
