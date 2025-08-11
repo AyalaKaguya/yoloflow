@@ -424,14 +424,26 @@ class TestProjectModelManager:
             source_file = Path(temp_dir) / "source_model.pt"
             source_file.write_text("fake model data")
             
-            # Add model
-            model_name = manager.add_pretrained_model(source_file)
+            # Add model with new API
+            model_name = manager.add_pretrained_model(
+                source_path=source_file,
+                model_name="Test Model",
+                description="A test model",
+                parameters=2600000
+            )
             assert model_name == "source_model.pt"
             
             # Check file was copied
             target_file = manager.pretrain_dir / "source_model.pt"
             assert target_file.exists()
             assert target_file.read_text() == "fake model data"
+            
+            # Check model info was saved
+            model_info = config.get_model_info("source_model.pt")
+            assert model_info is not None
+            assert model_info.name == "Test Model"
+            assert model_info.description == "A test model"
+            assert model_info.parameters == 2600000
     
     def test_add_pretrained_model_custom_name(self):
         """Test adding pretrained model with custom name."""
@@ -444,8 +456,12 @@ class TestProjectModelManager:
             source_file = Path(temp_dir) / "source_model.pt"
             source_file.write_text("fake model data")
             
-            # Add model with custom name
-            model_name = manager.add_pretrained_model(source_file, "custom_model")
+            # Add model with custom filename
+            model_name = manager.add_pretrained_model(
+                source_path=source_file,
+                model_name="Custom Model",
+                filename="custom_model.pt"
+            )
             assert model_name == "custom_model.pt"
             
             # Check file exists with custom name
@@ -468,7 +484,10 @@ class TestProjectModelManager:
             
             # Try to add duplicate
             with pytest.raises(ValueError, match="already exists"):
-                manager.add_pretrained_model(source_file)
+                manager.add_pretrained_model(
+                    source_path=source_file,
+                    model_name="Test Model"
+                )
     
     def test_remove_pretrained_model(self):
         """Test removing pretrained model."""
@@ -551,3 +570,120 @@ class TestProjectModelManager:
             assert "training_plans" not in summary
             assert "completed_plans" not in summary
             assert "pending_plans" not in summary
+
+
+class TestNewModelManagerAPI:
+    """Test the new enhanced model manager API."""
+    
+    def test_add_trained_model(self):
+        """Test adding trained model with detailed info."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_path = Path(temp_dir)
+            config = create_test_config(project_path, TaskType.DETECTION)
+            manager = ProjectModelManager(project_path, config)
+            
+            # Create source model file
+            source_file = Path(temp_dir) / "trained_model.pt"
+            source_file.write_text("fake trained model data")
+            
+            # Add trained model
+            model_name = manager.add_trained_model(
+                source_path=source_file,
+                plan_name="Test Plan",
+                model_name="Trained YOLO11",
+                description="Model trained on custom dataset",
+                parameters=2600000
+            )
+            assert model_name == "trained_model.pt"
+            
+            # Check file was copied to model directory
+            target_file = manager.model_dir / "trained_model.pt"
+            assert target_file.exists()
+            assert target_file.read_text() == "fake trained model data"
+            
+            # Check model info
+            model_info = config.get_model_info("trained_model.pt")
+            assert model_info is not None
+            assert model_info.name == "Trained YOLO11"
+            assert model_info.source == "plan_created"
+            assert model_info.parameters == 2600000
+    
+    def test_add_model_from_info(self):
+        """Test adding model using ProjectModelInfo."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_path = Path(temp_dir)
+            config = create_test_config(project_path, TaskType.DETECTION)
+            manager = ProjectModelManager(project_path, config)
+            
+            # Create source model file
+            source_file = Path(temp_dir) / "custom_model.pt"
+            source_file.write_text("custom model data")
+            
+            # Create model info
+            from yoloflow.model.project.project_model_info import ProjectModelInfo
+            model_info = ProjectModelInfo(
+                name="Custom YOLO Model",
+                filename="custom_yolo.pt",
+                description="A custom trained model",
+                parameters=5000000,
+                task_type=TaskType.DETECTION,
+                source="plan_created"
+            )
+            
+            # Add model using info
+            result_name = manager.add_model_from_info(model_info, source_file)
+            assert result_name == "custom_yolo.pt"
+            
+            # Check file was copied to correct directory (model dir for plan_created)
+            target_file = manager.model_dir / "custom_yolo.pt"
+            assert target_file.exists()
+            
+            # Check model info was saved
+            saved_info = config.get_model_info("custom_yolo.pt")
+            assert saved_info is not None
+            assert saved_info.name == "Custom YOLO Model"
+            assert saved_info.parameters == 5000000
+    
+    def test_enhanced_model_summary(self):
+        """Test the enhanced model summary with detailed info."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            project_path = Path(temp_dir)
+            config = create_test_config(project_path, TaskType.DETECTION)
+            manager = ProjectModelManager(project_path, config)
+            
+            # Add pretrained model
+            source_file1 = Path(temp_dir) / "pretrained.pt"
+            source_file1.write_text("pretrained data")
+            manager.add_pretrained_model(
+                source_path=source_file1,
+                model_name="YOLO11n",
+                parameters=2600000
+            )
+            
+            # Add trained model
+            source_file2 = Path(temp_dir) / "trained.pt"
+            source_file2.write_text("trained data")
+            manager.add_trained_model(
+                source_path=source_file2,
+                plan_name="Training Plan",
+                model_name="Custom Trained Model",
+                parameters=2700000
+            )
+            
+            # Get summary
+            summary = manager.get_model_summary()
+            
+            assert summary["pretrained_models"] == 1
+            assert summary["trained_models"] == 1
+            assert len(summary["model_details"]) == 2
+            assert "available_models" in summary
+            
+            # Check model details
+            model_details = summary["model_details"]
+            pretrained_detail = next(m for m in model_details if m["source"] == "imported")
+            trained_detail = next(m for m in model_details if m["source"] == "plan_created")
+            
+            assert pretrained_detail["name"] == "YOLO11n"
+            assert pretrained_detail["parameters"] == 2600000
+            assert trained_detail["name"] == "Custom Trained Model"
+            assert trained_detail["parameters"] == 2700000

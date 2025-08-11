@@ -18,7 +18,7 @@ class ProjectModelInfo:
     name: str  # Display name for the model
     filename: str  # Actual filename (e.g., "yolo11n.pt")
     description: str  # Model description
-    parameters: int  # Number of parameters (e.g., 2000000 for 2M)
+    parameters: str  # Number of parameters (e.g., 2000000 for 2M)
     task_type: TaskType  # Task type this model supports
     source: str  # Source of the model ("project_creation", "plan_created", "imported")
     
@@ -40,7 +40,7 @@ class ProjectModelInfo:
             name=data["name"],
             filename=data["filename"],
             description=data.get("description", ""),
-            parameters=data.get("parameters", 0),
+            parameters=data.get("parameters", ""),
             task_type=TaskType(data.get("task_type", TaskType.DETECTION.value)),
             source=data.get("source", "imported")
         )
@@ -51,7 +51,7 @@ class ProjectModelInfo:
         filename: str,
         name: Optional[str] = None,
         description: str = "",
-        parameters: int = 0,
+        parameters: str = "",
         task_type: TaskType = TaskType.DETECTION
     ) -> "ProjectModelInfo":
         """Create info for a pretrained model."""
@@ -74,7 +74,7 @@ class ProjectModelInfo:
         filename: str,
         plan_name: str,
         description: str = "",
-        parameters: int = 0,
+        parameters: str = "",
         task_type: TaskType = TaskType.DETECTION
     ) -> "ProjectModelInfo":
         """Create info for a trained model."""

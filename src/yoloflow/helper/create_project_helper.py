@@ -70,9 +70,15 @@ def initialize_project(project: Project, datasets: list[DatasetInfo], models: li
                 download_url, local_file, model.filename, parent_widget)
             if not success:
                 continue
-
-        # 将模型添加到项目
-        project.model_manager.add_pretrained_model(local_file, model.filename)
+        
+        project.model_manager.add_pretrained_model(
+            source_path=local_file,
+            model_name=model.name,
+            description=model.description,
+            parameters=model.parameters,
+            task_type=project.task_type,
+            filename=model.filename
+        )
 
         # 为选中模型创建计划
         plan = project.plan_manager.create_plan(

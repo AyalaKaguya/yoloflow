@@ -92,9 +92,15 @@ class ProjectModelManager:
         
         # 2. 添加文件系统中存在但配置中不存在的模型
         for model in filesystem_models - config_models:
-            model_info = ProjectModelInfo.create_pretrained(
+            # 自动推断模型信息
+            model_name = model.replace('.pt', '').replace('_', ' ').title()
+            model_info = ProjectModelInfo(
+                name=model_name,
                 filename=model,
-                task_type=self.task_type
+                description=f"Auto-discovered model: {model_name}",
+                parameters="",  # 未知参数量
+                task_type=self.task_type,
+                source="imported"
             )
             self.config.add_model(model_info)
         
@@ -118,13 +124,25 @@ class ProjectModelManager:
                 models.append(model_file.name)
         return sorted(models)
     
-    def add_pretrained_model(self, source_path: Union[str, Path], model_name: Optional[str] = None) -> str:
+    def add_pretrained_model(
+        self,
+        source_path: Union[str, Path],
+        model_name: str,
+        description: str = "",
+        parameters: str = "",
+        task_type: Optional[TaskType] = None,
+        filename: Optional[str] = None
+    ) -> str:
         """
-        Add a pretrained model to the project.
+        Add a pretrained model to the project with detailed information.
         
         Args:
             source_path: Path to source model file
-            model_name: Optional custom name for the model
+            model_name: Display name for the model (e.g., "YOLO11 Nano")
+            description: Description of the model
+            parameters: Number of parameters in the model
+            task_type: Task type this model supports (defaults to project task type)
+            filename: Custom filename (defaults to source filename)
             
         Returns:
             Name of the added model file
@@ -138,10 +156,10 @@ class ProjectModelManager:
             raise FileNotFoundError(f"Source model file not found: {source_path}")
         
         # Determine target filename
-        if model_name:
-            if not model_name.endswith('.pt'):
-                model_name += '.pt'
-            target_name = model_name
+        if filename:
+            if not filename.endswith('.pt'):
+                filename += '.pt'
+            target_name = filename
         else:
             target_name = source_path.name
         
@@ -155,11 +173,17 @@ class ProjectModelManager:
         import shutil
         shutil.copy2(source_path, target_path)
         
-        # Create model info and add to config
-        model_info = ProjectModelInfo.create_pretrained(
+        # Create model info with detailed information
+        model_info = ProjectModelInfo(
+            name=model_name,
             filename=target_name,
-            task_type=self.task_type
+            description=description,
+            parameters=parameters,
+            task_type=task_type or self.task_type,
+            source="imported"
         )
+        
+        # Add to config
         self.config.add_model(model_info)
         self.config.save()
         
@@ -183,6 +207,112 @@ class ProjectModelManager:
             self.config.save()
             return True
         return False
+    
+    def add_trained_model(
+        self,
+        source_path: Union[str, Path],
+        plan_name: str,
+        model_name: str,
+        description: str = "",
+        parameters: str = "",
+        filename: Optional[str] = None
+    ) -> str:
+        """
+        Add a trained model to the project with detailed information.
+        
+        Args:
+            source_path: Path to source model file
+            plan_name: Name of the training plan that created this model
+            model_name: Display name for the model
+            description: Description of the model
+            parameters: Number of parameters in the model
+            filename: Custom filename (defaults to source filename)
+            
+        Returns:
+            Name of the added model file
+            
+        Raises:
+            FileNotFoundError: If source file doesn't exist
+            ValueError: If model already exists
+        """
+        source_path = Path(source_path)
+        if not source_path.exists():
+            raise FileNotFoundError(f"Source model file not found: {source_path}")
+        
+        # Determine target filename
+        if filename:
+            if not filename.endswith('.pt'):
+                filename += '.pt'
+            target_name = filename
+        else:
+            target_name = source_path.name
+        
+        target_path = self.model_dir / target_name
+        
+        # Check if model already exists
+        if target_path.exists():
+            raise ValueError(f"Trained model '{target_name}' already exists")
+        
+        # Copy model file
+        import shutil
+        shutil.copy2(source_path, target_path)
+        
+        # Create model info with detailed information
+        model_info = ProjectModelInfo(
+            name=model_name,
+            filename=target_name,
+            description=description or f"Model trained from plan: {plan_name}",
+            parameters=parameters,
+            task_type=self.task_type,
+            source="plan_created"
+        )
+        
+        # Add to config
+        self.config.add_model(model_info)
+        self.config.save()
+        
+        return target_name
+    
+    def add_model_from_info(self, model_info: ProjectModelInfo, source_path: Union[str, Path]) -> str:
+        """
+        Add a model using a ProjectModelInfo instance.
+        
+        Args:
+            model_info: Complete model information
+            source_path: Path to source model file
+            
+        Returns:
+            Name of the added model file
+            
+        Raises:
+            FileNotFoundError: If source file doesn't exist
+            ValueError: If model already exists
+        """
+        source_path = Path(source_path)
+        if not source_path.exists():
+            raise FileNotFoundError(f"Source model file not found: {source_path}")
+        
+        # Determine target directory based on source
+        if model_info.source in ["imported", "project_creation"]:
+            target_dir = self.pretrain_dir
+        else:
+            target_dir = self.model_dir
+        
+        target_path = target_dir / model_info.filename
+        
+        # Check if model already exists
+        if target_path.exists():
+            raise ValueError(f"Model '{model_info.filename}' already exists")
+        
+        # Copy model file
+        import shutil
+        shutil.copy2(source_path, target_path)
+        
+        # Add to config
+        self.config.add_model(model_info)
+        self.config.save()
+        
+        return model_info.filename
     
     def get_pretrained_model_path(self, model_name: str) -> Optional[Path]:
         """Get absolute path to pretrained model."""
