@@ -296,6 +296,24 @@ class CreateProjectWizard(QMainWindow):
         form_layout.addRow("保存路径*:", path_layout)
 
         layout.addLayout(form_layout)
+
+        # 项目完整路径预览 - 直接添加到主布局以占满宽度
+        self.full_path_label = QLabel("请填写项目名称和路径")
+        self.full_path_label.setStyleSheet("""
+            QLabel {
+                color: #007ACC;
+                background-color: #363636;
+                border: 1px solid #555;
+                border-radius: 4px;
+                padding: 8px;
+                margin-top: 10px;
+                font-weight: bold;
+            }
+        """)
+        self.full_path_label.setWordWrap(True)
+        
+        layout.addWidget(self.full_path_label)
+        
         layout.addStretch()
 
         # 添加到Tab
@@ -657,7 +675,43 @@ class CreateProjectWizard(QMainWindow):
         self.project_name = self.name_edit.text().strip()
         self.project_description = self.description_edit.toPlainText().strip()
         self.project_path = self.path_edit.text().strip()
+        
+        # 更新完整路径显示
+        self._update_full_path_display()
+        
         self._update_button_state()
+    
+    def _update_full_path_display(self):
+        """更新完整路径显示"""
+        if self.project_name and self.project_path:
+            # 构建完整路径
+            full_path = Path(self.project_path) / self.project_name
+            self.full_path_label.setText(f"项目将保存到: {full_path}")
+            self.full_path_label.setStyleSheet("""
+                QLabel {
+                    color: #007ACC;
+                    background-color: #363636;
+                    border: 1px solid #007ACC;
+                    border-radius: 4px;
+                    padding: 8px;
+                    margin-top: 10px;
+                    font-weight: bold;
+                }
+            """)
+        else:
+            # 都没填写
+            self.full_path_label.setText("请填写项目名称和路径")
+            self.full_path_label.setStyleSheet("""
+                QLabel {
+                    color: #aaa;
+                    background-color: #363636;
+                    border: 1px solid #555;
+                    border-radius: 4px;
+                    padding: 8px;
+                    margin-top: 10px;
+                    font-weight: bold;
+                }
+            """)
 
     def _on_tab_changed(self, index):
         """Tab页面切换时的处理"""
