@@ -283,7 +283,7 @@ class TestDatasetManager:
         temp_project.config._config_data["datasets"]["detailed"] = []
         
         # Reinitialize dataset manager to trigger migration
-        dm_new = DatasetManager(temp_project.config, temp_project.project_path)
+        dm_new = DatasetManager(temp_project.project_path, temp_project.config)
         
         # Check that datasets were migrated
         datasets = dm_new.datasets

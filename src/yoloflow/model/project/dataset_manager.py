@@ -24,7 +24,7 @@ class DatasetManager:
     and maintaining dataset records in the project configuration.
     """
     
-    def __init__(self, project_config: ProjectConfig, project_path: Path):
+    def __init__(self, project_path: Path, project_config: ProjectConfig):
         """
         Initialize dataset manager.
         

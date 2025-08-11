@@ -55,7 +55,7 @@ class Project:
         self.config = ProjectConfig(config_path)
         
         # Initialize dataset manager
-        self.dataset_manager = DatasetManager(self.config, self.project_path)
+        self.dataset_manager = DatasetManager(self.project_path, self.config)
         
         # Initialize model manager
         self.model_manager = ProjectModelManager(self.project_path, self.config)
