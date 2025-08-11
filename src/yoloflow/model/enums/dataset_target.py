@@ -7,3 +7,4 @@ class DatasetTarget(Enum):
     VAL = "val"              # Validation set  
     TEST = "test"            # Test set
     MIXED = "mixed"          # Use dataset internal settings
+    UNUSED = "unused"        # Unused dataset

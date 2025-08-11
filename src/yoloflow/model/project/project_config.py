@@ -165,6 +165,28 @@ class ProjectConfig:
             self._config_data["models"] = {"available": [], "current": "", "pretrained": []}
         self._config_data["models"]["current"] = model_name or ""
     
+    # Pretrained model management
+    @property
+    def pretrained_models(self) -> List[str]:
+        """Get list of pretrained model names."""
+        return self._config_data.get("models", {}).get("pretrained", [])
+    
+    def add_pretrained_model(self, model_name: str):
+        """Add a pretrained model to the list."""
+        if "models" not in self._config_data:
+            self._config_data["models"] = {"available": [], "current": "", "pretrained": []}
+        if model_name not in self._config_data["models"]["pretrained"]:
+            self._config_data["models"]["pretrained"].append(model_name)
+    
+    def remove_pretrained_model(self, model_name: str):
+        """Remove a pretrained model from the list."""
+        if "models" in self._config_data and model_name in self._config_data["models"]["pretrained"]:
+            self._config_data["models"]["pretrained"].remove(model_name)
+    
+    def has_pretrained_model(self, model_name: str) -> bool:
+        """Check if a pretrained model exists in the configuration."""
+        return model_name in self.pretrained_models
+    
     # Training parameters
     @property
     def training_parameters(self) -> Dict[str, Any]:
