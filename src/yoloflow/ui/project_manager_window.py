@@ -347,7 +347,8 @@ class ProjectManagerWindow(QMainWindow):
     
     def _on_workspace_closed(self):
         """工作区窗口关闭时的处理"""
-        # 当工作区关闭时，重新显示项目管理器
+        # 工作区关闭时，重新显示项目管理器
+        # 注意：如果用户选择退出应用，这个方法不会被调用，因为整个应用都会退出
         self.show()
 
     def closeEvent(self, event):

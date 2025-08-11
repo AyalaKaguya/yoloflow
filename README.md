@@ -110,3 +110,34 @@ CreateProjectWizard还有最后一个问题没有解决：当你使用tab栏切�
 - Tab切换和页面导航
 - 实时状态更新和进度显示
 - 完整的信号连接和事件处理
+
+```mermaid
+flowchart TD
+    A[uv run yoloflow] --> B[SplashScreen]
+    B --> C{PyTorch 等库加载}
+    C -->|成功| D[ProjectManagerWindow]
+    C -->|失败| E[ErrorDialog]
+
+    D --> F{用户操作}
+    F -->|新建项目| G[CreateProjectWizard]
+    F -->|打开已有| H[OpenProjectDialog]
+    F -->|设置| I[SettingsDialog]
+    F -->|退出| J[QuitApp]
+
+    G -->|完成| K[Project] --写入>--> L[yoloflow.db]
+    G -->|完成| M[WorkspaceWindow] & N[Close ProjectManager]
+
+    H -->|成功| O[WorkspaceWindow] & P[Close ProjectManager]
+
+    subgraph Workspace
+        Q[TopBar] --> R[WorkFlowBar]
+        R --> S[MainContentArea]
+        S --> T[PageStack Home / Dataset / Model / Job / Train / Log / Eval / Export]
+        S --> U[RunControlPanel]
+        S --> V[StatusBar]
+    end
+
+    M --> Workspace
+    O --> Workspace
+
+```
