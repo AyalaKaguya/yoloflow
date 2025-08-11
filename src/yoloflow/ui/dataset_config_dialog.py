@@ -14,6 +14,7 @@ from PySide6.QtCore import Qt, Signal
 from ..model.enums import TaskType, DatasetType
 from ..model.project import DatasetInfo
 from .components import CustomTitleBar
+from .message_box import show_warning_message
 from ..__version__ import __version__
 
 
@@ -261,35 +262,35 @@ class DatasetConfigDialog(QDialog):
     def _validate_and_accept(self):
         """验证并接受"""
         if not self.name_edit.text().strip():
-            QMessageBox.warning(self, "验证错误", "请输入数据集名称")
+            show_warning_message(self, "验证错误", "请输入数据集名称")
             return
 
         if not self.path_edit.text().strip():
-            QMessageBox.warning(self, "验证错误", "请选择数据集路径（文件夹或压缩包）")
+            show_warning_message(self, "验证错误", "请选择数据集路径（文件夹或压缩包）")
             return
 
         # 验证路径是否存在
         dataset_path = Path(self.path_edit.text().strip())
         if not dataset_path.exists():
-            QMessageBox.warning(self, "验证错误", "所选择的数据集路径不存在")
+            show_warning_message(self, "验证错误", "所选择的数据集路径不存在")
             return
 
         # 检查是文件夹还是文件
         if dataset_path.is_dir():
             # 是文件夹，检查是否为空
             if not any(dataset_path.iterdir()):
-                QMessageBox.warning(self, "验证错误", "所选择的数据集文件夹为空")
+                show_warning_message(self, "验证错误", "所选择的数据集文件夹为空")
                 return
         elif dataset_path.is_file():
             # 是文件，检查是否为支持的压缩包格式
             supported_extensions = {
                 '.zip', '.rar', '.7z', '.tar', '.gz', '.bz2'}
             if dataset_path.suffix.lower() not in supported_extensions:
-                QMessageBox.warning(
+                show_warning_message(
                     self, "验证错误", "请选择支持的压缩包格式（.zip, .rar, .7z, .tar, .gz, .bz2）")
                 return
         else:
-            QMessageBox.warning(self, "验证错误", "请选择一个有效的文件夹或压缩包文件")
+            show_warning_message(self, "验证错误", "请选择一个有效的文件夹或压缩包文件")
             return
 
         self.accept()
