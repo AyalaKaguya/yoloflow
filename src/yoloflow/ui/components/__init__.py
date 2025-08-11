@@ -6,5 +6,6 @@ UI Components for YOLOFlow.
 
 from .title_bar import CustomTitleBar
 from .project_item import RecentProjectItem
+from .message_box import show_warning_message, show_critical_message, show_information_message
 
-__all__ = ['CustomTitleBar', 'RecentProjectItem']
+__all__ = ['CustomTitleBar', 'RecentProjectItem', 'show_warning_message', 'show_critical_message', 'show_information_message']

@@ -441,6 +441,7 @@ class CreateProjectWizard(QMainWindow):
             QMainWindow {
                 background-color: #2b2b2b;
                 color: white;
+                border: 1px solid rgba(255, 255, 255, 0.2);
             }
         """)
 

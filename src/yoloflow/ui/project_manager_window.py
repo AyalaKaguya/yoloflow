@@ -17,8 +17,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, QSize, Signal, QPoint
 from PySide6.QtGui import QFont, QPalette, QColor, QMouseEvent
 
-from ..service.project_manager import ProjectManager
-from ..model import TaskType
+from ..service import ProjectManager
 from ..__version__ import __version__
 from .components import CustomTitleBar, RecentProjectItem
 from .project_delete_window import ProjectDeleteWindow
@@ -39,7 +38,7 @@ class ProjectManagerWindow(QMainWindow):
         # 设置窗口属性
         self.setWindowTitle("YOLOFlow - 项目管理器")
         self.setFixedSize(900, 600)
-        self.setWindowFlags(Qt.WindowType.FramelessWindowHint)  # 无边框
+        self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.Window)  # 无边框
 
         # 主widget
         central_widget = QWidget()
@@ -99,7 +98,6 @@ class ProjectManagerWindow(QMainWindow):
         panel.setStyleSheet("""
             QWidget {
                 background-color: #363636;
-                border-right: 1px solid #4a4a4a;
             }
         """)
         layout = QVBoxLayout(panel)

@@ -14,7 +14,7 @@ from PySide6.QtCore import Qt, Signal
 from ..model.enums import TaskType, DatasetType
 from ..model.project import DatasetInfo
 from .components import CustomTitleBar
-from .message_box import show_warning_message
+from .components.message_box import show_warning_message
 from ..__version__ import __version__
 
 
@@ -235,6 +235,7 @@ class DatasetConfigDialog(QDialog):
             QDialog {
                 background-color: #2b2b2b;
                 color: white;
+                border: 1px solid rgba(255, 255, 255, 0.2);
             }
         """)
 

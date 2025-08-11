@@ -66,7 +66,7 @@ class ProjectDeleteWindow(QMainWindow):
         # 设置窗口属性
         self.setWindowTitle("删除项目")
         self.setFixedSize(600, 450)
-        self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
+        self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.Window)
 
         # 主widget
         central_widget = QWidget()
