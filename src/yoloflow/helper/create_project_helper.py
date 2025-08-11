@@ -1,10 +1,13 @@
-
+"""
+辅助从创建项目助手创建项目的相关函数
+"""
 
 import os
 from pathlib import Path
 import sys
 from typing import Optional
 from ..model import Project, DatasetInfo, ModelInfo
+from PySide6.QtWidgets import QMessageBox
 
 
 GITHUB_ASSETS_REPO = "ultralytics/assets"
@@ -51,7 +54,6 @@ def initialize_project(project: Project, datasets: list[DatasetInfo], models: li
         if not local_file.exists():
             if model.filename not in GITHUB_ASSETS_NAMES:
                 # 既不是预定义的模型，也不是可以下载到的模型，报错并跳过
-                from PySide6.QtWidgets import QMessageBox
                 QMessageBox.critical(None, "错误", f"无法找到模型文件，已跳过: {model.filename}")
                 continue
             # 下载预训练模型

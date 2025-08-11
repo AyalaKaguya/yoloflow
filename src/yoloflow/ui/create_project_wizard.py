@@ -370,7 +370,7 @@ class CreateProjectWizard(QMainWindow):
         layout.addWidget(title)
 
         # 说明文字
-        description = QLabel("选择适合您任务类型的预训练模型。您可以选择多个模型进行比较。")
+        description = QLabel("选择适合您任务类型的预训练模型。您可以选择多个模型进行比较，也可以稍后添加。")
         description.setStyleSheet(
             "color: #aaa; margin-bottom: 20px; font-size: 12px;")
         layout.addWidget(description)
