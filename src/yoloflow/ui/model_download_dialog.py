@@ -91,9 +91,9 @@ class DownloadWorker(QThread):
             self.download_finished.emit(True, "下载成功")
             
         except requests.exceptions.RequestException as e:
-            self.download_finished.emit(False, f"网络错误: {str(e)}")
+            self.download_finished.emit(False, f"网络错误: {str(e)}，你也可以稍后在项目中重新尝试添加模型")
         except Exception as e:
-            self.download_finished.emit(False, f"下载失败: {str(e)}")
+            self.download_finished.emit(False, f"下载失败: {str(e)}，你也可以稍后在项目中重新尝试添加模型")
 
 
 class ModelDownloadDialog(QDialog):
