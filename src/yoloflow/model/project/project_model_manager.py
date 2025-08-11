@@ -69,12 +69,12 @@ class ProjectModelManager:
         if config_models - filesystem_models:
             self.config.save()
     
-    def get_pretrained_models(self) -> List[str]:
+    def get_pretrained_models(self) -> List[ProjectModelInfo]:
         """
-        Get list of pretrained model files.
+        Get list of pretrained model information.
         
         Returns:
-            List of pretrained model filenames, synchronized between config and filesystem
+            List of ProjectModelInfo objects for pretrained models, synchronized between config and filesystem
         """
         # 从配置中获取预训练模型列表
         config_models = set(self.config.pretrained_models)
@@ -108,21 +108,58 @@ class ProjectModelManager:
         if (config_models - filesystem_models) or (filesystem_models - config_models):
             self.config.save()
         
-        # 返回文件系统中实际存在的模型列表（已排序）
-        return sorted(list(filesystem_models))
+        # 返回文件系统中实际存在的模型的ProjectModelInfo对象
+        result = []
+        for model_info in self.config.model_details:
+            if (model_info.source in ["imported", "project_creation"] and 
+                model_info.filename in filesystem_models):
+                result.append(model_info)
+        
+        # 按文件名排序
+        return sorted(result, key=lambda x: x.filename)
     
-    def get_trained_models(self) -> List[str]:
+    def get_trained_models(self) -> List[ProjectModelInfo]:
         """
-        Get list of trained model files.
+        Get list of trained model information.
         
         Returns:
-            List of trained model filenames
+            List of ProjectModelInfo objects for trained models
         """
-        models = []
+        # 获取文件系统中的训练模型文件
+        filesystem_models = set()
         if self.model_dir.exists():
             for model_file in self.model_dir.glob("*.pt"):
-                models.append(model_file.name)
-        return sorted(models)
+                filesystem_models.add(model_file.name)
+        
+        # 获取配置中的训练模型信息
+        result = []
+        for model_info in self.config.model_details:
+            if (model_info.source == "plan_created" and 
+                model_info.filename in filesystem_models):
+                result.append(model_info)
+        
+        # 对于文件系统中存在但配置中不存在的训练模型，自动添加
+        config_trained_models = {info.filename for info in result}
+        for model_filename in filesystem_models - config_trained_models:
+            # 自动推断模型信息
+            model_name = model_filename.replace('.pt', '').replace('_', ' ').title()
+            model_info = ProjectModelInfo(
+                name=model_name,
+                filename=model_filename,
+                description=f"Auto-discovered trained model: {model_name}",
+                parameters="",
+                task_type=self.task_type,
+                source="plan_created"
+            )
+            self.config.add_model(model_info)
+            result.append(model_info)
+        
+        # 如果有新增模型，保存配置
+        if filesystem_models - config_trained_models:
+            self.config.save()
+        
+        # 按文件名排序
+        return sorted(result, key=lambda x: x.filename)
     
     def add_pretrained_model(
         self,
@@ -132,7 +169,7 @@ class ProjectModelManager:
         parameters: str = "",
         task_type: Optional[TaskType] = None,
         filename: Optional[str] = None
-    ) -> str:
+    ) -> ProjectModelInfo:
         """
         Add a pretrained model to the project with detailed information.
         
@@ -187,7 +224,7 @@ class ProjectModelManager:
         self.config.add_model(model_info)
         self.config.save()
         
-        return target_name
+        return model_info
     
     def remove_pretrained_model(self, model_name: str) -> bool:
         """
@@ -273,7 +310,7 @@ class ProjectModelManager:
         
         return target_name
     
-    def add_model_from_info(self, model_info: ProjectModelInfo, source_path: Union[str, Path]) -> str:
+    def add_model_from_info(self, model_info: ProjectModelInfo, source_path: Union[str, Path]) -> ProjectModelInfo:
         """
         Add a model using a ProjectModelInfo instance.
         
@@ -312,7 +349,7 @@ class ProjectModelManager:
         self.config.add_model(model_info)
         self.config.save()
         
-        return model_info.filename
+        return model_info
     
     def get_pretrained_model_path(self, model_name: str) -> Optional[Path]:
         """Get absolute path to pretrained model."""
@@ -323,6 +360,46 @@ class ProjectModelManager:
         """Get absolute path to trained model."""
         model_path = self.model_dir / model_name
         return model_path if model_path.exists() else None
+    
+    def get_pretrained_model_filenames(self) -> List[str]:
+        """
+        Get list of pretrained model filenames (compatibility method).
+        
+        Returns:
+            List of pretrained model filenames
+        """
+        return [model.filename for model in self.get_pretrained_models()]
+    
+    def get_trained_model_filenames(self) -> List[str]:
+        """
+        Get list of trained model filenames (compatibility method).
+        
+        Returns:
+            List of trained model filenames
+        """
+        return [model.filename for model in self.get_trained_models()]
+    
+    def get_model_info_by_filename(self, filename: str) -> Optional[ProjectModelInfo]:
+        """
+        Get model information by filename.
+        
+        Args:
+            filename: Model filename to search for
+            
+        Returns:
+            ProjectModelInfo object if found, None otherwise
+        """
+        # Search in pretrained models
+        for model in self.get_pretrained_models():
+            if model.filename == filename:
+                return model
+        
+        # Search in trained models
+        for model in self.get_trained_models():
+            if model.filename == filename:
+                return model
+        
+        return None
     
     def get_model_summary(self) -> Dict[str, Any]:
         """
@@ -337,8 +414,10 @@ class ProjectModelManager:
         return {
             "pretrained_models": len(pretrained_models),
             "trained_models": len(trained_models),
-            "pretrained_model_list": pretrained_models,
-            "trained_model_list": trained_models,
+            "pretrained_model_list": [model.filename for model in pretrained_models],
+            "trained_model_list": [model.filename for model in trained_models],
+            "pretrained_model_info": [model.to_dict() for model in pretrained_models],
+            "trained_model_info": [model.to_dict() for model in trained_models],
             "config_pretrained_models": self.config.pretrained_models,
             "available_models": self.config.available_models,
             "model_details": [info.to_dict() for info in self.config.model_details]

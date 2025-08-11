@@ -393,9 +393,21 @@ class TestProjectModelManager:
             
             models = manager.get_pretrained_models()
             assert len(models) == 2
-            assert "yolo11n.pt" in models
-            assert "yolo11s.pt" in models
-            assert "not_model.txt" not in models
+            
+            # Check that we get ProjectModelInfo objects
+            model_filenames = [model.filename for model in models]
+            assert "yolo11n.pt" in model_filenames
+            assert "yolo11s.pt" in model_filenames
+            assert "not_model.txt" not in model_filenames
+            
+            # Check that models are ProjectModelInfo objects
+            for model in models:
+                assert hasattr(model, 'name')
+                assert hasattr(model, 'filename')
+                assert hasattr(model, 'description')
+                assert hasattr(model, 'parameters')
+                assert hasattr(model, 'task_type')
+                assert hasattr(model, 'source')
     
     def test_get_trained_models(self):
         """Test getting trained models."""
@@ -410,8 +422,20 @@ class TestProjectModelManager:
             
             models = manager.get_trained_models()
             assert len(models) == 2
-            assert "best.pt" in models
-            assert "latest.pt" in models
+            
+            # Check that we get ProjectModelInfo objects
+            model_filenames = [model.filename for model in models]
+            assert "best.pt" in model_filenames
+            assert "latest.pt" in model_filenames
+            
+            # Check that models are ProjectModelInfo objects
+            for model in models:
+                assert hasattr(model, 'name')
+                assert hasattr(model, 'filename')
+                assert hasattr(model, 'description')
+                assert hasattr(model, 'parameters')
+                assert hasattr(model, 'task_type')
+                assert hasattr(model, 'source')
     
     def test_add_pretrained_model(self):
         """Test adding pretrained model."""
@@ -425,13 +449,13 @@ class TestProjectModelManager:
             source_file.write_text("fake model data")
             
             # Add model with new API
-            model_name = manager.add_pretrained_model(
+            model_info = manager.add_pretrained_model(
                 source_path=source_file,
                 model_name="Test Model",
                 description="A test model",
                 parameters="2600000"
             )
-            assert model_name == "source_model.pt"
+            assert model_info.filename == "source_model.pt"
             
             # Check file was copied
             target_file = manager.pretrain_dir / "source_model.pt"
@@ -462,7 +486,7 @@ class TestProjectModelManager:
                 model_name="Custom Model",
                 filename="custom_model.pt"
             )
-            assert model_name == "custom_model.pt"
+            assert model_name.filename == "custom_model.pt"
             
             # Check file exists with custom name
             target_file = manager.pretrain_dir / "custom_model.pt"
@@ -547,8 +571,8 @@ class TestProjectModelManager:
             assert manager.model_dir.exists()
             
             # Test empty lists initially
-            assert manager.get_pretrained_models() == []
-            assert manager.get_trained_models() == []
+            assert len(manager.get_pretrained_models()) == 0
+            assert len(manager.get_trained_models()) == 0
     
     def test_get_model_summary(self):
         """Test getting model summary."""
@@ -632,7 +656,7 @@ class TestNewModelManagerAPI:
             
             # Add model using info
             result_name = manager.add_model_from_info(model_info, source_file)
-            assert result_name == "custom_yolo.pt"
+            assert result_name.filename == "custom_yolo.pt"
             
             # Check file was copied to correct directory (model dir for plan_created)
             target_file = manager.model_dir / "custom_yolo.pt"

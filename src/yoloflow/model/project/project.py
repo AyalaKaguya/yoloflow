@@ -202,18 +202,48 @@ class Project:
         Get list of available trained models in the project.
         
         Returns:
-            list: List of model file names
+            list: List of model file names (compatibility method)
         """
-        return self.model_manager.get_trained_models()
+        return self.model_manager.get_trained_model_filenames()
     
     def get_pretrained_models(self) -> List[str]:
         """
         Get list of available pretrained models in the project.
         
         Returns:
-            list: List of pretrained model file names
+            list: List of pretrained model file names (compatibility method)
+        """
+        return self.model_manager.get_pretrained_model_filenames()
+    
+    def get_model_info_list(self) -> List:
+        """
+        Get list of all model information objects.
+        
+        Returns:
+            list: List of ProjectModelInfo objects for all models
+        """
+        result = []
+        result.extend(self.model_manager.get_pretrained_models())
+        result.extend(self.model_manager.get_trained_models())
+        return result
+    
+    def get_pretrained_model_info_list(self) -> List:
+        """
+        Get list of pretrained model information objects.
+        
+        Returns:
+            list: List of ProjectModelInfo objects for pretrained models
         """
         return self.model_manager.get_pretrained_models()
+    
+    def get_trained_model_info_list(self) -> List:
+        """
+        Get list of trained model information objects.
+        
+        Returns:
+            list: List of ProjectModelInfo objects for trained models
+        """
+        return self.model_manager.get_trained_models()
     
     def get_training_runs(self) -> List[str]:
         """
