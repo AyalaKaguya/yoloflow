@@ -37,6 +37,8 @@ class LoadingWorker(QThread):
 class SplashScreen(QSplashScreen):
     """Custom splash screen with loading progress display."""
     
+    finished = Signal()  # 添加完成信号
+    
     def __init__(self):
         # Create a simple colored pixmap as placeholder
         pixmap = self._create_placeholder_image()
@@ -156,6 +158,7 @@ class SplashScreen(QSplashScreen):
     
     def _close_splash(self):
         """Close the splash screen and signal completion."""
+        self.finished.emit()  # 发射完成信号
         self.close()
 
 

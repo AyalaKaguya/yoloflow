@@ -22,6 +22,7 @@ from ..__version__ import __version__
 from .components import CustomTitleBar, RecentProjectItem
 from .project_delete_window import ProjectDeleteWindow
 from .create_project_wizard import CreateProjectWizard
+from .workspace_window import WorkspaceWindow
 
 
 class ProjectManagerWindow(QMainWindow):
@@ -270,9 +271,9 @@ class ProjectManagerWindow(QMainWindow):
             project = self.project_manager.open_project(project_dir)
             self._load_recent_projects()  # 刷新最近项目列表
 
-            # TODO: 这里之后会打开项目主界面
+            # 打开工作区窗口
+            self._open_workspace(project)
 
-            self.close()
         except Exception as e:
             QMessageBox.critical(self, "错误", f"处理新创建的项目时发生错误：{str(e)}")
 
@@ -290,9 +291,9 @@ class ProjectManagerWindow(QMainWindow):
                 project = self.project_manager.open_project(project_dir)
                 self._load_recent_projects()  # 刷新最近项目列表
 
-                # TODO: 这里之后会打开项目主界面
+                # 打开工作区窗口
+                self._open_workspace(project)
 
-                self.close()
             except Exception as e:
                 QMessageBox.critical(self, "错误", f"打开项目失败: {str(e)}")
 
@@ -328,11 +329,26 @@ class ProjectManagerWindow(QMainWindow):
             project = self.project_manager.open_project(project_path)
             self._load_recent_projects()  # 刷新最近项目列表
 
-            # TODO: 这里之后会打开项目主界面
+            # 打开工作区窗口
+            self._open_workspace(project)
 
-            self.close()
         except Exception as e:
             QMessageBox.critical(self, "错误", f"打开项目失败: {str(e)}")
+    
+    def _open_workspace(self, project):
+        """打开工作区窗口"""
+        # 创建工作区窗口
+        self.workspace_window = WorkspaceWindow(project, self.project_manager, None)
+        self.workspace_window.closed.connect(self._on_workspace_closed)
+        self.workspace_window.show()
+        
+        # 关闭项目管理器
+        self.close()
+    
+    def _on_workspace_closed(self):
+        """工作区窗口关闭时的处理"""
+        # 当工作区关闭时，重新显示项目管理器
+        self.show()
 
     def closeEvent(self, event):
         """关闭事件"""

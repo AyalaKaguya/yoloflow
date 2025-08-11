@@ -78,6 +78,8 @@ CreateProjectWizard还有最后一个问题没有解决：当你使用tab栏切�
 
 **工作区 Workspace**
 
+接下来的任务十分的复杂，你需要整体考量。
+
 工作区是用户进行项目开发和管理的主要区域，包含主页、数据集、模型、作业、训练、日志、评估、导出八大功能、其中作业和训练需要使用额外的逻辑来驱动项目数据模型，也是yoloflow最核心的功能。
 
 工作区是典型的上下式布局，从上往下分别是顶栏（三段式水平布局固定高度，包含菜单栏、标题、窗口控制（放大缩小关闭））、工作流栏（两段式水平布局固定高度，包含主页、数据集、模型、作业、训练、日志、评估、导出这八个Tab项居左，以及运行计划控件（选择计划、运行、暂停、终止）居右）、主窗口（不限制布局，填充剩余高度，负责显示工作流栏中每一个具体项目的Frame）、状态栏（两段式水平布局固定高度，包含文本信息居左，和进度条（两个）、页面控制（缩放调整）居右）总计四栏。整体设计风格应当使用深色背景，浅色或白色字体，整个工作区应当能够适用不同的桌面大小（并非响应式设计，目标设备在4:3~16:9之间，分辨率短边至少720）。需要重新设计窗口的标题栏以实现复杂的三段式设计，其中窗口控制按钮宽高比4:3高度要占满并居右，项目名称文本居中，菜单栏局左，如果屏幕比较小，菜单栏应当可以将标题栏向右挤压直到碰到窗口控制按钮，此时开始将多出的字缩略显示。菜单栏主要包含项目（新建项目、打开项目、项目管理器|保存、另存为|退出）、运行（运行当前选中、暂停、终止、跳转到作业页面）、窗口（包含八个窗口的每一个）、帮助（文档、协议、关于）
@@ -86,151 +88,25 @@ CreateProjectWizard还有最后一个问题没有解决：当你使用tab栏切�
 
 完成以上项目，将每个子页面创建一个空白页放置在`ui/pages`中，组件放置在`ui/components`中，页面窗口放置在`ui`中。在这一阶段，你不需要编写任何业务代码，仅需创建UI结构，你仅需将传入的项目实例和项目管理器的实例传递到根部组件即可。
 
+**工作区窗口已完成！**
 
-## 程序运行框图
+当前已实现：
+1. **工作区主窗口** (`WorkspaceWindow`) - 无边框的主要工作区域
+2. **四栏布局结构**：
+   - **顶栏** (`WorkspaceTitleBar`) - 三段式布局，包含菜单栏、项目标题、窗口控制按钮
+   - **工作流栏** (`WorkflowBar`) - 八个Tab项 + 运行计划控件
+   - **主窗口** - 页面容器，显示当前选中的页面
+   - **状态栏** (`StatusBar`) - 状态信息、进度条、缩放控制
+3. **八个功能页面** - 主页、数据集、模型、作业、训练、日志、评估、导出（空白实现）
+4. **完整的菜单系统** - 项目、运行、窗口、帮助菜单
+5. **运行计划控件** - 计划选择、运行/暂停/终止按钮
+6. **项目管理器集成** - 打开项目时自动启动工作区
+7. **深色主题设计** - 符合要求的视觉风格
 
-```mermaid
-graph TD
-    A[用户启动应用] --> B{项目管理器};
-    B --> C[创建新项目];
-    B --> D[打开现有项目];
-    C --> E[进入项目主界面];
-    D --> E;
-
-    subgraph 项目工作区
-        E --> F[数据集管理器];
-        E --> G[模型管理器];
-    end
-
-    subgraph 数据处理流程
-        F --> F1[导入数据];
-        F1 --> F2[标注数据/预览标注];
-        F2 --> F3[划分数据集];
-    end
-
-    subgraph 模型训练流程
-        G --> G1[选择基础模型];
-        G1 --> G2[配置训练参数];
-        G2 --> G3{选择数据集};
-        F3 --> G3;
-        G3 --> G4[启动训练];
-        G4 --> G5[监控训练过程 & 查看结果];
-        G5 --> G6[模型版本管理];
-    end
-
-    subgraph 模型部署流程
-        E --> H[模型导出助手];
-        G6 -- 选择最佳模型 --> H;
-        H --> H1[选择导出格式];
-        H1 --> H2[执行导出];
-        H2 --> I[获得部署文件 .onnx等];
-    end
-
-    I --> J[应用外部署];
-```
-
-## 程序架构图
-
-```mermaid
-graph TD
-    subgraph Presentation Layer [表现层]
-        UI_PM[ProjectManager UI]
-        UI_DM[DatasetManager UI]
-        UI_MM[ModelManager UI]
-        UI_EA[ExportAssistant UI]
-    end
-
-    subgraph Application Logic Layer [应用逻辑层]
-        App_PM[ProjectManager_Logic]
-        App_DM[DatasetManager_Logic]
-        App_MM[ModelManager_Logic]
-        App_EA[ExportAssistant_Logic]
-    end
-
-    subgraph Core Abstraction Layer [核心抽象层]
-        Abs_Trainer[Trainer Abstraction]
-        Abs_Predictor[Predictor Abstraction]
-        Abs_Dataset[Dataset Adapter]
-        Abs_Exporter[Exporter Abstraction]
-    end
-
-    subgraph Backend/Framework Layer [后端/框架层]
-        PyTorch
-        Ultralytics_YOLO[YOLO Library e.g., ultralytics]
-        OpenCV
-        Pillow
-        ONNX_Runtime[ONNX/TensorRT etc.]
-    end
-
-    subgraph Data & Persistence Layer [数据与持久化层]
-        FileSystem[文件系统 图片, 视频]
-        ProjectConfig[项目配置文件 JSON/YAML]
-        Annotations[标注文件 TXT/JSON]
-        ModelWeights[模型权重 .pt]
-    end
-
-    %% 定义层级依赖关系
-    UI_PM --> App_PM;
-    UI_DM --> App_DM;
-    UI_MM --> App_MM;
-    UI_EA --> App_EA;
-
-    App_PM --> ProjectConfig;
-    App_DM --> Abs_Dataset;
-    App_DM --> FileSystem;
-    App_DM --> Annotations;
-
-    App_MM --> Abs_Trainer;
-    App_MM --> Abs_Predictor;
-    App_MM --> ModelWeights;
-
-    App_EA --> Abs_Exporter;
-
-    Abs_Trainer --> Ultralytics_YOLO;
-    Abs_Predictor --> Ultralytics_YOLO;
-    Abs_Exporter --> Ultralytics_YOLO;
-    Abs_Dataset --> FileSystem;
-
-    Ultralytics_YOLO --> PyTorch;
-    Ultralytics_YOLO --> OpenCV;
-    Ultralytics_YOLO --> ONNX_Runtime;
-```
-
-## 路线图
-
-```mermaid
-graph TD
-    subgraph MVP v1.0 - 核心流程闭环
-        A[简易项目创建] --> B[核心标注功能<br/>硬编码类别];
-        B --> C[一键训练<br/>硬编码参数];
-        C --> D[获得.pt模型文件];
-    end
-
-    subgraph v1.1 - 核心体验增强
-        E[动态类别管理<br/>增/删/改/查] --> F[训练参数可配置<br/>模型, epochs, batch_size];
-        F --> G[训练结果展示<br/>在UI中显示mAP和loss];
-    end
-
-    subgraph v1.2 - 管理能力升级
-        H[完整项目管理器<br/>打开/最近项目] --> I[数据集管理<br/>train/val/test划分UI];
-        I --> J[模型版本管理<br/>保存和对比多次训练];
-    end
-    
-    subgraph v1.5 - 部署与验证
-        K[模型导出助手<br/>导出为ONNX] --> L[简易推理工具<br/>加载模型测试单张图片];
-        L --> M[标注预览功能];
-    end
-
-    subgraph v2.0+ - 专业化与扩展
-        N[数据增强配置] --> O[支持更多模型/框架];
-        O --> P[支持更多导出格式<br/>TensorRT, CoreML];
-        P --> Q[高级功能<br/>模型对比, 数据集分析];
-    end
-
-    %% 定义流程
-    D --> E;
-    G --> H;
-    J --> K;
-    M --> N;
-
-```
+关键特性：
+- 无边框设计，自定义标题栏
+- 响应式布局适配不同屏幕尺寸
+- 标题文本智能截断避免与窗口控制按钮冲突
+- Tab切换和页面导航
+- 实时状态更新和进度显示
+- 完整的信号连接和事件处理
