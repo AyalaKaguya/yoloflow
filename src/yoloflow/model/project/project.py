@@ -28,7 +28,7 @@ class Project:
     - runs/: Directory for training logs and results
     """
     
-    REQUIRED_DIRS = ["dataset", "model", "pretrain", "runs"]
+    REQUIRED_DIRS = ["dataset", "model", "pretrain", "runs", "plan"]
     CONFIG_FILE = "yoloflow.toml"
     
     def __init__(self, project_path: Union[str, Path]):
@@ -149,6 +149,12 @@ class Project:
     @property
     def runs_dir(self) -> Path:
         """Get training runs directory path."""
+        return self.project_path / "runs"
+    
+    @property
+    def plan_dir(self) -> Path:
+        """Get training plans directory path."""
+        return self.project_path / "plan"
         return self.project_path / "runs"
     
     @property

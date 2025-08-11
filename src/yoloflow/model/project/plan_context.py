@@ -63,7 +63,7 @@ class PlanContext:
         self.updated_at = datetime.now().isoformat()
         
         # Plan file path
-        self.plan_file = self.project_path / "model" / f"{self.plan_id}.toml"
+        self.plan_file = self.project_path / "plan" / f"{self.plan_id}.toml"
     
     @classmethod
     def create_new(

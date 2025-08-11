@@ -255,10 +255,10 @@ class TestProjectPlanManager:
             project_path = Path(temp_dir)
             config = create_test_config(project_path, TaskType.DETECTION)
             manager = ProjectPlanManager(project_path, config)
-            
+
             assert manager.project_path == project_path
             assert manager.task_type == TaskType.DETECTION
-            assert manager.model_dir.exists()
+            assert manager.plan_dir.exists()
     
     def test_create_plan(self):
         """Test creating a plan."""

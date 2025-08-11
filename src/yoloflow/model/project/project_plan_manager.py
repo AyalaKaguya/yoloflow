@@ -27,10 +27,10 @@ class ProjectPlanManager:
         """
         self.project_path = Path(project_path)
         self.config = project_config
-        self.model_dir = self.project_path / "model"
+        self.plan_dir = self.project_path / "plan"
         
-        # Ensure model directory exists
-        self.model_dir.mkdir(exist_ok=True)
+        # Ensure plan directory exists
+        self.plan_dir.mkdir(exist_ok=True)
         
         # Cache for loaded plans
         self._plans_cache: Dict[str, PlanContext] = {}
@@ -42,11 +42,11 @@ class ProjectPlanManager:
         return self.config.task_type
     
     def _load_all_plans(self):
-        """Load all existing plans from model directory."""
-        if not self.model_dir.exists():
+        """Load all existing plans from plan directory."""
+        if not self.plan_dir.exists():
             return
         
-        for plan_file in self.model_dir.glob("*.toml"):
+        for plan_file in self.plan_dir.glob("*.toml"):
             try:
                 plan = PlanContext.load_from_file(plan_file)
                 self._plans_cache[plan.plan_id] = plan

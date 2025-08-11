@@ -7,6 +7,7 @@ from typing import Any, Dict, List, Optional, Union
 
 from ..enums import TaskType
 from .project_config import ProjectConfig
+from .project_model_info import ProjectModelInfo
 
 
 class ProjectModelManager:
@@ -43,8 +44,30 @@ class ProjectModelManager:
         # 触发 get_pretrained_models 来执行同步逻辑
         self.get_pretrained_models()
         
-        # 同步训练模型（如果需要的话）
-        # TODO: 如果以后需要在配置中跟踪训练模型，可以在这里添加逻辑
+        # 同步训练模型
+        self._sync_trained_models()
+    
+    def _sync_trained_models(self):
+        """同步训练模型信息"""
+        # 获取文件系统中的训练模型
+        filesystem_models = set()
+        if self.model_dir.exists():
+            for model_file in self.model_dir.glob("*.pt"):
+                filesystem_models.add(model_file.name)
+        
+        # 获取配置中的训练模型
+        config_models = set()
+        for model_info in self.config.model_details:
+            if model_info.source == "plan_created":
+                config_models.add(model_info.filename)
+        
+        # 移除配置中存在但文件系统中不存在的训练模型
+        for model in config_models - filesystem_models:
+            self.config.remove_model(model)
+        
+        # 如果有变化，保存配置
+        if config_models - filesystem_models:
+            self.config.save()
     
     def get_pretrained_models(self) -> List[str]:
         """
@@ -53,7 +76,7 @@ class ProjectModelManager:
         Returns:
             List of pretrained model filenames, synchronized between config and filesystem
         """
-        # 从配置中获取模型列表
+        # 从配置中获取预训练模型列表
         config_models = set(self.config.pretrained_models)
         
         # 从文件系统获取实际存在的模型
@@ -65,11 +88,15 @@ class ProjectModelManager:
         # 同步配置和文件系统
         # 1. 移除配置中存在但文件系统中不存在的模型
         for model in config_models - filesystem_models:
-            self.config.remove_pretrained_model(model)
+            self.config.remove_model(model)
         
         # 2. 添加文件系统中存在但配置中不存在的模型
         for model in filesystem_models - config_models:
-            self.config.add_pretrained_model(model)
+            model_info = ProjectModelInfo.create_pretrained(
+                filename=model,
+                task_type=self.task_type
+            )
+            self.config.add_model(model_info)
         
         # 如果有变化，保存配置
         if (config_models - filesystem_models) or (filesystem_models - config_models):
@@ -128,8 +155,12 @@ class ProjectModelManager:
         import shutil
         shutil.copy2(source_path, target_path)
         
-        # 将模型信息同步到项目配置中
-        self.config.add_pretrained_model(target_name)
+        # Create model info and add to config
+        model_info = ProjectModelInfo.create_pretrained(
+            filename=target_name,
+            task_type=self.task_type
+        )
+        self.config.add_model(model_info)
         self.config.save()
         
         return target_name
@@ -147,8 +178,8 @@ class ProjectModelManager:
         model_path = self.pretrain_dir / model_name
         if model_path.exists():
             model_path.unlink()
-            # 从项目配置中移除模型信息
-            self.config.remove_pretrained_model(model_name)
+            # Remove from config
+            self.config.remove_model(model_name)
             self.config.save()
             return True
         return False
@@ -179,7 +210,8 @@ class ProjectModelManager:
             "pretrained_model_list": pretrained_models,
             "trained_model_list": trained_models,
             "config_pretrained_models": self.config.pretrained_models,
-            "current_model": self.config.current_model
+            "available_models": self.config.available_models,
+            "model_details": [info.to_dict() for info in self.config.model_details]
         }
     
     def __str__(self) -> str:

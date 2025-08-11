@@ -14,6 +14,9 @@ except ImportError:
     import tomli as tomllib
 import tomli_w
 
+from .project_model_info import ProjectModelInfo
+from .plan_info import PlanInfo
+
 
 class ProjectConfig:
     """
@@ -55,21 +58,18 @@ class ProjectConfig:
             },
             "datasets": {
                 "available": [],
-                "current": ""
+                "detailed": []
             },
             "models": {
                 "available": [],
-                "current": "",
-                "pretrained": []
+                "detailed": []
+            },
+            "plans": {
+                "available": [],
+                "detailed": []
             },
             "training": {
-                "history": [],
-                "parameters": {
-                    "epochs": 100,
-                    "batch_size": 16,
-                    "learning_rate": 0.01,
-                    "image_size": 640
-                }
+                "history": []
             },
             "custom_fields": {}
         }
@@ -128,7 +128,8 @@ class ProjectConfig:
         """Remove a dataset from the available list."""
         if "datasets" in self._config_data and dataset_name in self._config_data["datasets"]["available"]:
             self._config_data["datasets"]["available"].remove(dataset_name)
-            if self._config_data["datasets"]["current"] == dataset_name:
+            # Only check current if it exists in the new structure
+            if "current" in self._config_data["datasets"] and self._config_data["datasets"]["current"] == dataset_name:
                 self._config_data["datasets"]["current"] = ""
     
     @property
@@ -145,70 +146,143 @@ class ProjectConfig:
     # Model management
     @property
     def available_models(self) -> List[str]:
+        """Get list of available model names for quick access."""
         return self._config_data.get("models", {}).get("available", [])
     
-    def add_model(self, model_name: str):
-        """Add a model to the available list."""
-        if "models" not in self._config_data:
-            self._config_data["models"] = {"available": [], "current": "", "pretrained": []}
-        if model_name not in self._config_data["models"]["available"]:
-            self._config_data["models"]["available"].append(model_name)
-    
     @property
-    def current_model(self) -> Optional[str]:
-        current = self._config_data.get("models", {}).get("current", "")
-        return current if current else None
+    def model_details(self) -> List[ProjectModelInfo]:
+        """Get detailed model information."""
+        detailed = self._config_data.get("models", {}).get("detailed", [])
+        return [ProjectModelInfo.from_dict(model_data) for model_data in detailed]
     
-    @current_model.setter
-    def current_model(self, model_name: Optional[str]):
+    def add_model(self, model_info: ProjectModelInfo):
+        """Add a model with detailed information."""
         if "models" not in self._config_data:
-            self._config_data["models"] = {"available": [], "current": "", "pretrained": []}
-        self._config_data["models"]["current"] = model_name or ""
+            self._config_data["models"] = {"available": [], "detailed": []}
+        
+        # Add to available list if not present
+        if model_info.filename not in self._config_data["models"]["available"]:
+            self._config_data["models"]["available"].append(model_info.filename)
+        
+        # Add to detailed list (remove existing if updating)
+        detailed = self._config_data["models"]["detailed"]
+        detailed = [m for m in detailed if m["filename"] != model_info.filename]
+        detailed.append(model_info.to_dict())
+        self._config_data["models"]["detailed"] = detailed
     
-    # Pretrained model management
+    def remove_model(self, filename: str):
+        """Remove a model by filename."""
+        if "models" in self._config_data:
+            # Remove from available list
+            if filename in self._config_data["models"]["available"]:
+                self._config_data["models"]["available"].remove(filename)
+            
+            # Remove from detailed list
+            detailed = self._config_data["models"]["detailed"]
+            detailed = [m for m in detailed if m["filename"] != filename]
+            self._config_data["models"]["detailed"] = detailed
+    
+    def get_model_info(self, filename: str) -> Optional[ProjectModelInfo]:
+        """Get detailed model information by filename."""
+        for model_info in self.model_details:
+            if model_info.filename == filename:
+                return model_info
+        return None
+    
+    def has_model(self, filename: str) -> bool:
+        """Check if a model exists in the configuration."""
+        return filename in self.available_models
+    
+    # Legacy pretrained model support (for backwards compatibility)
     @property
     def pretrained_models(self) -> List[str]:
-        """Get list of pretrained model names."""
-        return self._config_data.get("models", {}).get("pretrained", [])
+        """Get list of pretrained model filenames (legacy support)."""
+        pretrained = []
+        for model_info in self.model_details:
+            if model_info.source in ["imported", "project_creation"]:
+                pretrained.append(model_info.filename)
+        return pretrained
     
     def add_pretrained_model(self, model_name: str):
-        """Add a pretrained model to the list."""
-        if "models" not in self._config_data:
-            self._config_data["models"] = {"available": [], "current": "", "pretrained": []}
-        if model_name not in self._config_data["models"]["pretrained"]:
-            self._config_data["models"]["pretrained"].append(model_name)
+        """Add a pretrained model (legacy support)."""
+        # Check if already exists in detailed models
+        if not self.has_model(model_name):
+            model_info = ProjectModelInfo.create_pretrained(
+                filename=model_name,
+                task_type=self.task_type
+            )
+            self.add_model(model_info)
     
     def remove_pretrained_model(self, model_name: str):
-        """Remove a pretrained model from the list."""
-        if "models" in self._config_data and model_name in self._config_data["models"]["pretrained"]:
-            self._config_data["models"]["pretrained"].remove(model_name)
+        """Remove a pretrained model (legacy support)."""
+        self.remove_model(model_name)
     
     def has_pretrained_model(self, model_name: str) -> bool:
-        """Check if a pretrained model exists in the configuration."""
+        """Check if a pretrained model exists (legacy support)."""
         return model_name in self.pretrained_models
     
-    # Training parameters
+    # Plan management
     @property
-    def training_parameters(self) -> Dict[str, Any]:
-        return self._config_data.get("training", {}).get("parameters", {})
+    def available_plans(self) -> List[str]:
+        """Get list of available plan IDs for quick access."""
+        return self._config_data.get("plans", {}).get("available", [])
     
-    def set_training_parameter(self, key: str, value: Any):
-        """Set a training parameter."""
-        if "training" not in self._config_data:
-            self._config_data["training"] = {"history": [], "parameters": {}}
-        if "parameters" not in self._config_data["training"]:
-            self._config_data["training"]["parameters"] = {}
-        self._config_data["training"]["parameters"][key] = value
+    @property
+    def plan_details(self) -> List[PlanInfo]:
+        """Get detailed plan information."""
+        detailed = self._config_data.get("plans", {}).get("detailed", [])
+        return [PlanInfo.from_dict(plan_data) for plan_data in detailed]
     
-    def get_training_parameter(self, key: str, default: Any = None) -> Any:
-        """Get a training parameter."""
-        return self.training_parameters.get(key, default)
+    def add_plan(self, plan_info: PlanInfo):
+        """Add a plan with detailed information."""
+        if "plans" not in self._config_data:
+            self._config_data["plans"] = {"available": [], "detailed": []}
+        
+        # Add to available list if not present
+        if plan_info.plan_id not in self._config_data["plans"]["available"]:
+            self._config_data["plans"]["available"].append(plan_info.plan_id)
+        
+        # Add to detailed list (remove existing if updating)
+        detailed = self._config_data["plans"]["detailed"]
+        detailed = [p for p in detailed if p["plan_id"] != plan_info.plan_id]
+        detailed.append(plan_info.to_dict())
+        self._config_data["plans"]["detailed"] = detailed
+    
+    def remove_plan(self, plan_id: str):
+        """Remove a plan by ID."""
+        if "plans" in self._config_data:
+            # Remove from available list
+            if plan_id in self._config_data["plans"]["available"]:
+                self._config_data["plans"]["available"].remove(plan_id)
+            
+            # Remove from detailed list
+            detailed = self._config_data["plans"]["detailed"]
+            detailed = [p for p in detailed if p["plan_id"] != plan_id]
+            self._config_data["plans"]["detailed"] = detailed
+    
+    def get_plan_info(self, plan_id: str) -> Optional[PlanInfo]:
+        """Get detailed plan information by ID."""
+        for plan_info in self.plan_details:
+            if plan_info.plan_id == plan_id:
+                return plan_info
+        return None
+    
+    def update_plan_status(self, plan_id: str, status: str):
+        """Update plan status."""
+        plan_info = self.get_plan_info(plan_id)
+        if plan_info:
+            plan_info.update_status(status)
+            self.add_plan(plan_info)  # Update in config
+    
+    def has_plan(self, plan_id: str) -> bool:
+        """Check if a plan exists in the configuration."""
+        return plan_id in self.available_plans
     
     # Training history
     def add_training_record(self, record: Dict[str, Any]):
         """Add a training history record."""
         if "training" not in self._config_data:
-            self._config_data["training"] = {"history": [], "parameters": {}}
+            self._config_data["training"] = {"history": []}
         if "history" not in self._config_data["training"]:
             self._config_data["training"]["history"] = []
         
