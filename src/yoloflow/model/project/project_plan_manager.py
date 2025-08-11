@@ -46,12 +46,30 @@ class ProjectPlanManager:
         if not self.plan_dir.exists():
             return
         
+        from .plan_info import PlanInfo
+        config_needs_update = False
+        
         for plan_file in self.plan_dir.glob("*.toml"):
             try:
                 plan = PlanContext.load_from_file(plan_file)
                 self._plans_cache[plan.plan_id] = plan
+                
+                # Check if plan info exists in config, if not add it
+                if not self.config.has_plan(plan.plan_id):
+                    plan_info = PlanInfo.create_new(
+                        plan_id=plan.plan_id,
+                        name=plan.name,
+                        file_path=f"plan/{plan.plan_id}.toml"
+                    )
+                    self.config.add_plan(plan_info)
+                    config_needs_update = True
+                    
             except Exception as e:
                 print(f"Warning: Failed to load plan {plan_file}: {e}")
+        
+        # Save config if updated
+        if config_needs_update:
+            self.config.save()
     
     def create_plan(
         self,
@@ -82,6 +100,16 @@ class ProjectPlanManager:
         # Save and cache
         plan.save()
         self._plans_cache[plan.plan_id] = plan
+        
+        # Add plan info to project configuration
+        from .plan_info import PlanInfo
+        plan_info = PlanInfo.create_new(
+            plan_id=plan.plan_id,
+            name=plan.name,
+            file_path=f"plan/{plan.plan_id}.toml"
+        )
+        self.config.add_plan(plan_info)
+        self.config.save()
         
         return plan
     
@@ -115,6 +143,11 @@ class ProjectPlanManager:
         if plan:
             plan.delete()
             del self._plans_cache[plan_id]
+            
+            # Remove plan info from project configuration
+            self.config.remove_plan(plan_id)
+            self.config.save()
+            
             return True
         return False
     
