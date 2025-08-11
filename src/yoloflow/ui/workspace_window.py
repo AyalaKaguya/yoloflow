@@ -156,10 +156,7 @@ class WorkspaceWindow(QWidget):
 
     def _toggle_maximize(self):
         """切换最大化状态"""
-        if self.isMaximized():
-            self.showNormal()
-        else:
-            self.showMaximized()
+        pass # 在标题栏中处理
 
     def _goto_page(self, index):
         """跳转到指定页面"""

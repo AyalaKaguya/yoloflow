@@ -188,21 +188,21 @@ class WorkspaceTitleBar(QWidget):
         """
         
         # 最小化按钮
-        min_btn = QPushButton("−")
+        min_btn = QPushButton("—")
         min_btn.setFixedSize(53, 40)  # 4:3比例，高度40
         min_btn.setStyleSheet(button_style)
         min_btn.clicked.connect(self.minimize_clicked.emit)
         controls_layout.addWidget(min_btn)
         
         # 最大化按钮
-        max_btn = QPushButton("□")
-        max_btn.setFixedSize(53, 40)
-        max_btn.setStyleSheet(button_style)
-        max_btn.clicked.connect(self.maximize_clicked.emit)
-        controls_layout.addWidget(max_btn)
+        self.max_btn = QPushButton("🗖")
+        self.max_btn.setFixedSize(53, 40)
+        self.max_btn.setStyleSheet(button_style)
+        self.max_btn.clicked.connect(self.toggle_maximize)
+        controls_layout.addWidget(self.max_btn)
         
         # 关闭按钮
-        close_btn = QPushButton("×")
+        close_btn = QPushButton("✕")
         close_btn.setFixedSize(53, 40)
         close_btn.setStyleSheet(button_style + """
             QPushButton:hover {
@@ -216,7 +216,16 @@ class WorkspaceTitleBar(QWidget):
         controls_widget = QWidget()
         controls_widget.setLayout(controls_layout)
         layout.addWidget(controls_widget)
-    
+        
+    def toggle_maximize(self):
+        self.maximize_clicked.emit()
+        if self.window().isMaximized():
+            self.window().showNormal()
+            self.max_btn.setText("🗖")
+        else:
+            self.window().showMaximized()
+            self.max_btn.setText("🗗")
+            
     def set_project_name(self, name):
         """设置项目名称"""
         self.project_name = name
