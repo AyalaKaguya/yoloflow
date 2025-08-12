@@ -17,13 +17,12 @@ class ModelCard(QFrame):
     clicked = Signal(str)  # 点击卡片信号，传递模型名称
     
     def __init__(self, model_name="示例模型", model_type="检测", description="模型描述", 
-                 params_count="11.2M", accuracy="85.3%", model_size="22.4MB", parent=None):
+                 params_count="11.2M", model_size="22.4MB", parent=None):
         super().__init__(parent)
         self.model_name = model_name
         self.model_type = model_type
         self.description = description
         self.params_count = params_count
-        self.accuracy = accuracy
         self.model_size = model_size
         self._setup_ui()
         
@@ -123,15 +122,6 @@ class ModelCard(QFrame):
             }
         """)
         stats_layout.addWidget(params_label)
-        
-        accuracy_label = QLabel(f"精度: {self.accuracy}")
-        accuracy_label.setStyleSheet("""
-            QLabel {
-                color: #aaaaaa;
-                font-size: 11px;
-            }
-        """)
-        stats_layout.addWidget(accuracy_label)
         
         size_label = QLabel(f"大小: {self.model_size}")
         size_label.setStyleSheet("""
@@ -428,11 +418,11 @@ class ModelPage(QWidget):
         left_buttons_layout = QHBoxLayout()
         left_buttons_layout.setSpacing(8)
         
-        add_btn = QPushButton("新增")
+        download_btn = QPushButton("在线模型")
         import_btn = QPushButton("导入")
         export_btn = QPushButton("导出")
         
-        for btn in [add_btn, import_btn, export_btn]:
+        for btn in [download_btn, import_btn, export_btn]:
             btn.setStyleSheet("""
                 QPushButton {
                     background-color: #555555;
@@ -447,11 +437,11 @@ class ModelPage(QWidget):
                 }
             """)
         
-        add_btn.clicked.connect(self._on_add_model)
+        download_btn.clicked.connect(self._on_add_model)
         import_btn.clicked.connect(self._on_import_model)
         export_btn.clicked.connect(self._on_export_model)
         
-        left_buttons_layout.addWidget(add_btn)
+        left_buttons_layout.addWidget(download_btn)
         left_buttons_layout.addWidget(import_btn)
         left_buttons_layout.addWidget(export_btn)
         left_buttons_layout.addStretch()
@@ -556,6 +546,11 @@ class ModelPage(QWidget):
         
         # 模型分类容器
         self.models_container = QWidget()
+        self.models_container.setStyleSheet("""
+            QWidget {
+                background-color: transparent;
+            }
+        """)
         self.models_layout = QVBoxLayout(self.models_container)
         self.models_layout.setContentsMargins(0, 0, 0, 0)
         self.models_layout.setSpacing(16)
@@ -571,15 +566,15 @@ class ModelPage(QWidget):
         # 预训练模型组
         pretrained_group = ModelCategoryGroup("预训练模型")
         pretrained_models = [
-            ("YOLOv8n", "检测", "轻量级目标检测模型", "3.2M", "37.3%", "6.2MB"),
-            ("YOLOv8s", "检测", "小型目标检测模型", "11.2M", "44.9%", "21.5MB"),
-            ("YOLOv8m", "检测", "中型目标检测模型", "25.9M", "50.2%", "49.7MB"),
-            ("ResNet50", "分类", "经典分类网络", "25.6M", "76.1%", "97.8MB"),
-            ("EfficientNet-B0", "分类", "高效分类网络", "5.3M", "77.1%", "20.1MB"),
+            ("YOLOv8n", "检测", "轻量级目标检测模型", "3.2M", "6.2MB"),
+            ("YOLOv8s", "检测", "小型目标检测模型", "11.2M", "21.5MB"),
+            ("YOLOv8m", "检测", "中型目标检测模型", "25.9M", "49.7MB"),
+            ("ResNet50", "分类", "经典分类网络", "25.6M", "97.8MB"),
+            ("EfficientNet-B0", "分类", "高效分类网络", "5.3M", "20.1MB"),
         ]
         
-        for name, type_, desc, params, acc, size in pretrained_models:
-            card = ModelCard(name, type_, desc, params, acc, size)
+        for name, type_, desc, params, size in pretrained_models:
+            card = ModelCard(name, type_, desc, params, size)
             card.clicked.connect(self._on_model_clicked)
             pretrained_group.add_model_card(card)
             
@@ -588,12 +583,12 @@ class ModelPage(QWidget):
         # 训练过的模型组
         trained_group = ModelCategoryGroup("训练过的模型")
         trained_models = [
-            ("自定义YOLOv8-项目1", "检测", "在项目1数据上训练的模型", "11.2M", "62.5%", "21.5MB"),
-            ("自定义分类器-A", "分类", "项目专用分类模型", "5.3M", "89.2%", "20.1MB"),
+            ("自定义YOLOv8-项目1", "检测", "在项目1数据上训练的模型", "11.2M", "21.5MB"),
+            ("自定义分类器-A", "分类", "项目专用分类模型", "5.3M", "20.1MB"),
         ]
-        
-        for name, type_, desc, params, acc, size in trained_models:
-            card = ModelCard(name, type_, desc, params, acc, size)
+
+        for name, type_, desc, params, size in trained_models:
+            card = ModelCard(name, type_, desc, params, size)
             card.clicked.connect(self._on_model_clicked)
             trained_group.add_model_card(card)
             
@@ -602,11 +597,11 @@ class ModelPage(QWidget):
         # 导入的模型组
         imported_group = ModelCategoryGroup("导入的模型")
         imported_models = [
-            ("第三方检测模型", "检测", "从外部导入的检测模型", "18.5M", "55.8%", "35.2MB"),
+            ("第三方检测模型", "检测", "从外部导入的检测模型", "18.5M", "35.2MB"),
         ]
-        
-        for name, type_, desc, params, acc, size in imported_models:
-            card = ModelCard(name, type_, desc, params, acc, size)
+
+        for name, type_, desc, params, size in imported_models:
+            card = ModelCard(name, type_, desc, params, size)
             card.clicked.connect(self._on_model_clicked)
             imported_group.add_model_card(card)
             
