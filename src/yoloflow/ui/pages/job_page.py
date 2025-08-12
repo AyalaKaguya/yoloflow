@@ -292,14 +292,36 @@ class PlanDetailPanel(QScrollArea):
             }
         """)
         
-        # 主容器
-        self.content_widget = QWidget()
-        self.content_widget.setStyleSheet("""
+        # 外层容器（用于居中）
+        outer_widget = QWidget()
+        outer_widget.setStyleSheet("""
             QWidget {
                 background-color: transparent;
             }
         """)
-        self.setWidget(self.content_widget)
+        self.setWidget(outer_widget)
+        
+        # 外层布局（水平居中）
+        outer_layout = QHBoxLayout(outer_widget)
+        outer_layout.setContentsMargins(20, 20, 20, 20)  # 添加外边距
+        
+        # 添加左侧弹性空间
+        outer_layout.addStretch()
+        
+        # 主容器（有最大宽度限制）
+        self.content_widget = QWidget()
+        self.content_widget.setMaximumWidth(1000)  # 最大宽度1000px
+        self.content_widget.setMinimumWidth(600)  # 最小宽度600px
+        self.content_widget.setStyleSheet("""
+            QWidget {
+                background-color: transparent;
+                border: none;
+            }
+        """)
+        outer_layout.addWidget(self.content_widget)
+        
+        # 添加右侧弹性空间
+        outer_layout.addStretch()
         
         # 主布局
         self.main_layout = QVBoxLayout(self.content_widget)
@@ -570,7 +592,7 @@ class PlanDetailPanel(QScrollArea):
     def set_plan_data(self, plan_id, plan_data):
         """设置计划数据"""
         self.current_plan_id = plan_id
-        self.title_label.setText(f"计划详情: {plan_data.get('name', '未知计划')}")
+        self.title_label.setText(f"{plan_data.get('name', '未知计划')}")
         self.name_edit.setText(plan_data.get('name', ''))
         # 这里应该加载更多数据...
         
