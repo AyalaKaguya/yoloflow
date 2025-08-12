@@ -365,6 +365,7 @@ class WorkspaceWindow(QMainWindow):
             event.ignore()
 
     def nativeEvent(self, eventType: QByteArray | bytes | bytearray | memoryview, message: int) -> object:
+        # TODO：非Windows平台无法调整窗口大小
         if eventType == "windows_generic_MSG":
             try:
                 from ctypes import wintypes, c_short
