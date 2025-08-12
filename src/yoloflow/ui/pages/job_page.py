@@ -399,6 +399,8 @@ class PlanDetailPanel(QScrollArea):
         self.task_type_combo = QComboBox()
         self.task_type_combo.addItems(["检测", "分类", "分割", "关键点"])
         self.task_type_combo.setStyleSheet(self._get_combo_style())
+        self.task_type_combo.setCurrentIndex(0)  # 默认选择检测
+        self.task_type_combo.wheelEvent = lambda e:e.ignore()
         basic_layout.addRow("任务类型:", self.task_type_combo)
         
         # 创建日期
@@ -488,6 +490,7 @@ class PlanDetailPanel(QScrollArea):
         self.epochs_spinbox.setRange(1, 1000)
         self.epochs_spinbox.setValue(100)
         self.epochs_spinbox.setStyleSheet(self._get_spinbox_style())
+        self.epochs_spinbox.wheelEvent = lambda e:e.ignore()
         training_layout.addRow("纪元:", self.epochs_spinbox)
         
         # 初始学习率
@@ -497,6 +500,7 @@ class PlanDetailPanel(QScrollArea):
         self.learning_rate_spinbox.setSingleStep(0.001)
         self.learning_rate_spinbox.setValue(0.01)
         self.learning_rate_spinbox.setStyleSheet(self._get_spinbox_style())
+        self.learning_rate_spinbox.wheelEvent = lambda e:e.ignore()
         training_layout.addRow("初始学习率:", self.learning_rate_spinbox)
         
         # 图像输入大小
@@ -505,6 +509,7 @@ class PlanDetailPanel(QScrollArea):
         self.image_size_spinbox.setSingleStep(32)
         self.image_size_spinbox.setValue(640)
         self.image_size_spinbox.setStyleSheet(self._get_spinbox_style())
+        self.image_size_spinbox.wheelEvent = lambda e:e.ignore()
         training_layout.addRow("图像输入大小:", self.image_size_spinbox)
         
         # 批次大小
@@ -512,6 +517,7 @@ class PlanDetailPanel(QScrollArea):
         self.batch_size_spinbox.setRange(1, 128)
         self.batch_size_spinbox.setValue(16)
         self.batch_size_spinbox.setStyleSheet(self._get_spinbox_style())
+        self.batch_size_spinbox.wheelEvent = lambda e:e.ignore()
         training_layout.addRow("批次大小:", self.batch_size_spinbox)
         
         # 额外训练参数（TOML片段）
@@ -556,6 +562,7 @@ class PlanDetailPanel(QScrollArea):
         self.conf_threshold_spinbox.setSingleStep(0.05)
         self.conf_threshold_spinbox.setValue(0.25)
         self.conf_threshold_spinbox.setStyleSheet(self._get_spinbox_style())
+        self.conf_threshold_spinbox.wheelEvent = lambda e:e.ignore()
         validation_layout.addRow("置信度阈值:", self.conf_threshold_spinbox)
         
         # IoU阈值
@@ -565,6 +572,7 @@ class PlanDetailPanel(QScrollArea):
         self.iou_threshold_spinbox.setSingleStep(0.05)
         self.iou_threshold_spinbox.setValue(0.45)
         self.iou_threshold_spinbox.setStyleSheet(self._get_spinbox_style())
+        self.iou_threshold_spinbox.wheelEvent = lambda e:e.ignore()
         validation_layout.addRow("IoU阈值:", self.iou_threshold_spinbox)
         
         self.main_layout.addWidget(validation_group)
