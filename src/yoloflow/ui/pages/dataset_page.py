@@ -8,7 +8,7 @@ from PySide6.QtWidgets import (
     QFrame, QStackedWidget, QMenu, QFileDialog, QMessageBox,
     QSizePolicy
 )
-from PySide6.QtCore import Qt, Signal, QSize
+from PySide6.QtCore import Qt, Signal, QSize, QTimer
 from PySide6.QtGui import QPixmap, QIcon, QFont, QAction
 
 
@@ -20,6 +20,15 @@ class ResponsiveGridWidget(QWidget):
         self.min_card_width = min_card_width
         self.card_spacing = card_spacing
         self.cards = []
+        self.scroll_area = None  # 滚动区域引用
+        self.last_layout_params = None  # 上次布局参数缓存
+        
+        # 防抖动定时器
+        self.resize_timer = QTimer()
+        self.resize_timer.setSingleShot(True)
+        self.resize_timer.timeout.connect(self._delayed_relayout)
+        self.resize_timer.setInterval(50)  # 50ms 延迟
+        
         self._setup_ui()
         
     def _setup_ui(self):
@@ -36,6 +45,10 @@ class ResponsiveGridWidget(QWidget):
         self.main_layout.setContentsMargins(0, 0, 0, 0)
         self.main_layout.setSpacing(self.card_spacing)
         self.main_layout.addStretch()  # 底部弹性空间
+        
+    def set_scroll_area(self, scroll_area):
+        """设置滚动区域引用，用于获取滚动条信息"""
+        self.scroll_area = scroll_area
         
     def addCard(self, card):
         """添加卡片"""
@@ -80,12 +93,21 @@ class ResponsiveGridWidget(QWidget):
         if not self.cards:
             return
             
-        # 清空现有布局（保留stretch）
-        self._clear_layout()
+        # 获取可用宽度，考虑滚动条
+        available_width = self._get_available_width()
         
         # 计算列数和卡片宽度
-        available_width = self.width() if self.width() > 0 else 800  # 默认宽度
         cols, card_width = self._calculate_layout(available_width)
+        
+        # 检查是否需要重新布局（避免不必要的闪烁）
+        current_params = (cols, card_width, len(self.cards))
+        if self.last_layout_params == current_params:
+            return
+        
+        self.last_layout_params = current_params
+        
+        # 清空现有布局（保留stretch）
+        self._clear_layout()
         
         # 创建行布局
         current_row_layout: QHBoxLayout | None = None
@@ -121,8 +143,27 @@ class ResponsiveGridWidget(QWidget):
                 cards_in_current_row = 0
                 current_row_layout = None
                 
+    def _get_available_width(self):
+        """获取可用宽度，考虑滚动条宽度"""
+        if not self.scroll_area:
+            return self.width() if self.width() > 0 else 800
+            
+        # 获取滚动区域的视口宽度
+        viewport = self.scroll_area.viewport()
+        available_width = viewport.width() if viewport else self.width()
+        
+        # 预留滚动条宽度（防止布局抖动）
+        # 即使滚动条当前不可见，也预留空间
+        scrollbar_width = 20  # 通常滚动条宽度约为12-20px
+        
+        return max(self.min_card_width, available_width - scrollbar_width)
+                
     def _calculate_layout(self, available_width):
         """计算列数和卡片宽度"""
+        # 确保最小宽度
+        if available_width < self.min_card_width:
+            return 1, self.min_card_width
+            
         # 计算最大可能的列数
         max_cols = max(1, (available_width + self.card_spacing) // (self.min_card_width + self.card_spacing))
         
@@ -138,11 +179,16 @@ class ResponsiveGridWidget(QWidget):
             
         return max_cols, max(card_width, self.min_card_width)
         
+    def _delayed_relayout(self):
+        """延迟布局更新"""
+        if self.cards:
+            self._relayout_cards()
+        
     def resizeEvent(self, event):
         """窗口大小改变时重新布局"""
         super().resizeEvent(event)
-        if self.cards:
-            self._relayout_cards()
+        # 使用定时器防抖动，避免频繁重新布局
+        self.resize_timer.start()
 
 
 class DatasetCard(QFrame):
@@ -565,6 +611,7 @@ class DatasetPage(QWidget):
         
         # 响应式网格容器
         self.grid_widget = ResponsiveGridWidget(min_card_width=280, card_spacing=16)
+        self.grid_widget.set_scroll_area(scroll_area)  # 设置滚动区域引用
         
         scroll_area.setWidget(self.grid_widget)
         layout.addWidget(scroll_area)
