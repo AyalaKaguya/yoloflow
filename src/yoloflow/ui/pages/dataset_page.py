@@ -5,10 +5,144 @@
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, 
     QLineEdit, QComboBox, QCheckBox, QScrollArea, QGridLayout,
-    QFrame, QStackedWidget, QMenu, QFileDialog, QMessageBox
+    QFrame, QStackedWidget, QMenu, QFileDialog, QMessageBox,
+    QSizePolicy
 )
 from PySide6.QtCore import Qt, Signal, QSize
 from PySide6.QtGui import QPixmap, QIcon, QFont, QAction
+
+
+class ResponsiveGridWidget(QWidget):
+    """响应式网格容器"""
+    
+    def __init__(self, min_card_width=280, card_spacing=16, parent=None):
+        super().__init__(parent)
+        self.min_card_width = min_card_width
+        self.card_spacing = card_spacing
+        self.cards = []
+        self._setup_ui()
+        
+    def _setup_ui(self):
+        """设置UI"""
+        self.setStyleSheet("""
+            ResponsiveGridWidget {
+                background-color: transparent;
+                border: none;
+            }
+        """)
+        
+        # 使用垂直布局来放置行
+        self.main_layout = QVBoxLayout(self)
+        self.main_layout.setContentsMargins(0, 0, 0, 0)
+        self.main_layout.setSpacing(self.card_spacing)
+        self.main_layout.addStretch()  # 底部弹性空间
+        
+    def addCard(self, card):
+        """添加卡片"""
+        self.cards.append(card)
+        self._relayout_cards()
+        
+    def removeCard(self, card):
+        """移除卡片"""
+        if card in self.cards:
+            self.cards.remove(card)
+            card.setParent(None)
+            self._relayout_cards()
+            
+    def clearCards(self):
+        """清空所有卡片"""
+        for card in self.cards:
+            card.setParent(None)
+        self.cards.clear()
+        self._clear_layout()
+        
+    def _clear_layout(self):
+        """清空布局"""
+        while self.main_layout.count() > 1:  # 保留最后的stretch
+            item = self.main_layout.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
+            elif item.layout():
+                self._clear_sublayout(item.layout())
+                
+    def _clear_sublayout(self, layout):
+        """递归清空子布局"""
+        while layout.count():
+            item = layout.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
+            elif item.layout():
+                self._clear_sublayout(item.layout())
+        layout.deleteLater()
+        
+    def _relayout_cards(self):
+        """重新布局卡片"""
+        if not self.cards:
+            return
+            
+        # 清空现有布局（保留stretch）
+        self._clear_layout()
+        
+        # 计算列数和卡片宽度
+        available_width = self.width() if self.width() > 0 else 800  # 默认宽度
+        cols, card_width = self._calculate_layout(available_width)
+        
+        # 创建行布局
+        current_row_layout: QHBoxLayout | None = None
+        cards_in_current_row = 0
+        
+        for i, card in enumerate(self.cards):
+            # 开始新行
+            if cards_in_current_row == 0:
+                current_row_layout = QHBoxLayout()
+                current_row_layout.setContentsMargins(0, 0, 0, 0)
+                current_row_layout.setSpacing(self.card_spacing)
+                
+            # 设置卡片大小
+            card.setFixedWidth(card_width)
+            if current_row_layout:
+                current_row_layout.addWidget(card)
+            cards_in_current_row += 1
+            
+            # 行满了或是最后一张卡片
+            if cards_in_current_row == cols or i == len(self.cards) - 1:
+                # 如果不是满行，添加弹性空间
+                if cards_in_current_row < cols and current_row_layout:
+                    current_row_layout.addStretch()
+                    
+                # 创建行容器并添加到主布局
+                if current_row_layout:
+                    row_widget = QWidget()
+                    row_widget.setLayout(current_row_layout)
+                    # 插入到stretch之前
+                    self.main_layout.insertWidget(self.main_layout.count() - 1, row_widget)
+                
+                # 重置行状态
+                cards_in_current_row = 0
+                current_row_layout = None
+                
+    def _calculate_layout(self, available_width):
+        """计算列数和卡片宽度"""
+        # 计算最大可能的列数
+        max_cols = max(1, (available_width + self.card_spacing) // (self.min_card_width + self.card_spacing))
+        
+        # 计算实际卡片宽度
+        total_spacing = (max_cols - 1) * self.card_spacing
+        card_width = (available_width - total_spacing) // max_cols
+        
+        # 确保卡片宽度不小于最小宽度
+        if card_width < self.min_card_width:
+            max_cols = max(1, max_cols - 1)
+            total_spacing = (max_cols - 1) * self.card_spacing
+            card_width = (available_width - total_spacing) // max_cols
+            
+        return max_cols, max(card_width, self.min_card_width)
+        
+    def resizeEvent(self, event):
+        """窗口大小改变时重新布局"""
+        super().resizeEvent(event)
+        if self.cards:
+            self._relayout_cards()
 
 
 class DatasetCard(QFrame):
@@ -25,7 +159,7 @@ class DatasetCard(QFrame):
         
     def _setup_ui(self):
         """设置卡片UI"""
-        self.setFixedSize(280, 220)
+        self.setFixedHeight(220)  # 只固定高度，宽度由容器控制
         self.setFrameStyle(QFrame.Shape.Box)
         self.setStyleSheet("""
             DatasetCard {
@@ -407,24 +541,30 @@ class DatasetPage(QWidget):
         # 数据集网格区域
         scroll_area = QScrollArea()
         scroll_area.setWidgetResizable(True)
+        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)  # 禁用横向滚动
+        scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)    # 按需显示纵向滚动
         scroll_area.setStyleSheet("""
             QScrollArea {
                 border: none;
                 background-color: transparent;
             }
-        """)
-        
-        # 网格容器
-        self.grid_widget = QWidget()
-        self.grid_widget.setStyleSheet("""
-            QWidget {
-                background-color: transparent;
-                border: none;
+            QScrollBar:vertical {
+                background-color: #555555;
+                width: 12px;
+                border-radius: 6px;
+            }
+            QScrollBar::handle:vertical {
+                background-color: #888888;
+                border-radius: 6px;
+                min-height: 20px;
+            }
+            QScrollBar::handle:vertical:hover {
+                background-color: #aaaaaa;
             }
         """)
-        self.grid_layout = QGridLayout(self.grid_widget)
-        self.grid_layout.setSpacing(16)
-        self.grid_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        
+        # 响应式网格容器
+        self.grid_widget = ResponsiveGridWidget(min_card_width=280, card_spacing=16)
         
         scroll_area.setWidget(self.grid_widget)
         layout.addWidget(scroll_area)
@@ -440,15 +580,15 @@ class DatasetPage(QWidget):
             ("COCO关键点", "关键点", "人体关键点检测数据集"),
             ("自定义数据集1", "检测", "项目专用数据集"),
             ("自定义数据集2", "分类", "分类任务数据集"),
+            ("YOLO数据集", "检测", "YOLO格式数据集"),
+            ("分类数据集A", "分类", "图像分类数据集A"),
+            ("分割数据集B", "分割", "实例分割数据集B"),
         ]
         
-        for i, (name, type_, desc) in enumerate(sample_datasets):
+        for name, type_, desc in sample_datasets:
             card = DatasetCard(name, type_, desc)
             card.clicked.connect(self._on_dataset_clicked)
-            
-            row = i // 4  # 每行4个
-            col = i % 4
-            self.grid_layout.addWidget(card, row, col)
+            self.grid_widget.addCard(card)
             
     def _on_dataset_clicked(self, dataset_name):
         """数据集卡片点击事件"""
