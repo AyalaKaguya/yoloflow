@@ -227,11 +227,9 @@ class WorkspaceTitleBar(QWidget):
     def toggle_maximize(self):
         self.maximize_clicked.emit()
         if self.window().isMaximized():
-            self.window().showNormal()
-            self.max_btn.setText("🗖")
-        else:
-            self.window().showMaximized()
             self.max_btn.setText("🗗")
+        else:
+            self.max_btn.setText("🗖")
 
     def set_project_name(self, name):
         """设置项目名称"""
@@ -275,8 +273,7 @@ class WorkspaceTitleBar(QWidget):
         """鼠标移动事件 - 拖拽窗口"""
         if event.buttons() == Qt.MouseButton.LeftButton and self.dragging and self.parent_window:
             if self.window().isMaximized():
-                self.window().showNormal()
-                self.max_btn.setText("🗖")
+                self.toggle_maximize()
             mouse_pos = event.globalPosition().toPoint()
             window_rect = self.parent_window.frameGeometry()
             # 根据比例重新计算窗口左上角位置

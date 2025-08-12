@@ -63,17 +63,16 @@ class WorkspaceWindow(QMainWindow):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground)
 
-        # 深色主题
-        central_widget = QWidget()
-        central_widget.setStyleSheet("""
-            QWidget {
-                background-color: #363636;
-                color: #ffffff;
-            }
-        """)
+        # 创建中央容器widget
+        self.central_widget = QWidget()
+        self.central_widget.setObjectName("central_widget")
+        self.setCentralWidget(self.central_widget)
+        
+        # 设置初始样式（非全屏状态）
+        self._update_window_style()
 
         # 主布局
-        main_layout = QVBoxLayout(central_widget)
+        main_layout = QVBoxLayout(self.central_widget)
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
 
@@ -88,15 +87,6 @@ class WorkspaceWindow(QMainWindow):
 
         # 主窗口：页面容器
         self.page_container = QStackedWidget()
-        self.page_container.setStyleSheet("""
-            QStackedWidget {
-                background-color: #2b2b2b;
-                border: none;
-            }
-            QStackedWidget > QWidget {
-                background-color: #2b2b2b;
-            }
-        """)
         main_layout.addWidget(self.page_container, 1)
 
         # 状态栏
@@ -105,7 +95,42 @@ class WorkspaceWindow(QMainWindow):
 
         # 创建页面
         self._create_pages()
-        self.setCentralWidget(central_widget)
+
+    def _update_window_style(self):
+        """根据窗口状态更新样式"""
+        if self.isMaximized():
+            # 全屏状态：直角，无边框
+            style = """
+                #central_widget {
+                    background-color: #363636;
+                    border: none;
+                    border-radius: 0px;
+                }
+                QStackedWidget{
+                    background-color: #2b2b2b;
+                    margin: 0px;
+                }
+                QWidget {
+                    color: #ffffff;
+                }
+            """
+        else:
+            # 非全屏状态：圆角，半透明边框
+            style = """
+                #central_widget {
+                    background-color: #363636;
+                    border: 1px solid rgba(255, 255, 255, 77);
+                    border-radius: 10px;
+                }
+                QStackedWidget{
+                    background-color: #2b2b2b;
+                    margin: 1px;
+                }
+                QWidget {
+                    color: #ffffff;
+                }
+            """
+        self.central_widget.setStyleSheet(style)
 
     def _create_pages(self):
         """创建所有页面"""
@@ -184,7 +209,19 @@ class WorkspaceWindow(QMainWindow):
 
     def _toggle_maximize(self):
         """切换最大化状态"""
-        pass  # 在标题栏中处理
+        if self.isMaximized():
+            self.showNormal()
+        else:
+            self.showMaximized()
+        # 状态变化后更新样式
+        self._update_window_style()
+
+    def changeEvent(self, event):
+        """窗口状态变化事件"""
+        super().changeEvent(event)
+        if event.type() == event.Type.WindowStateChange:
+            # 窗口状态变化时更新样式
+            self._update_window_style()
 
     def _goto_page(self, index):
         """跳转到指定页面"""
