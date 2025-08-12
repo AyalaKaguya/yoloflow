@@ -27,23 +27,13 @@ class PlanListItem(QFrame):
         self.plan_name = plan_name
         self.description = description
         self.status = status
+        self.is_selected = False  # 添加选中状态
         self._setup_ui()
         
     def _setup_ui(self):
         """设置UI"""
         self.setFixedHeight(80)
-        self.setStyleSheet("""
-            PlanListItem {
-                background-color: #3a3a3a;
-                border: 1px solid #555555;
-                border-radius: 6px;
-                margin: 2px;
-            }
-            PlanListItem:hover {
-                background-color: #404040;
-                border-color: #666666;
-            }
-        """)
+        self._update_style()  # 使用动态样式更新
         
         layout = QHBoxLayout(self)
         layout.setContentsMargins(12, 8, 8, 8)
@@ -105,6 +95,48 @@ class PlanListItem(QFrame):
         """)
         delete_btn.clicked.connect(lambda: self.delete_requested.emit(self.plan_id))
         layout.addWidget(delete_btn)
+    
+    def _update_style(self):
+        """更新样式"""
+        if self.is_selected:
+            style = """
+                PlanListItem {
+                    background-color: #4a9eff;
+                    border: 2px solid #007acc;
+                    border-radius: 6px;
+                    margin: 2px;
+                }
+                PlanListItem:hover {
+                    background-color: #5aafff;
+                    border-color: #0088dd;
+                }
+                QLabel {
+                    background-color: transparent;
+                    color: #ffffff;
+                }
+            """
+        else:
+            style = """
+                PlanListItem {
+                    background-color: #3a3a3a;
+                    border: 1px solid #555555;
+                    border-radius: 6px;
+                    margin: 2px;
+                }
+                PlanListItem:hover {
+                    background-color: #404040;
+                    border-color: #666666;
+                }
+                QLabel {
+                    background-color: transparent;
+                }
+            """
+        self.setStyleSheet(style)
+    
+    def set_selected(self, selected=True):
+        """设置选中状态"""
+        self.is_selected = selected
+        self._update_style()
         
     def mousePressEvent(self, event):
         """鼠标点击事件"""
@@ -262,6 +294,11 @@ class PlanDetailPanel(QScrollArea):
         
         # 主容器
         self.content_widget = QWidget()
+        self.content_widget.setStyleSheet("""
+            QWidget {
+                background-color: transparent;
+            }
+        """)
         self.setWidget(self.content_widget)
         
         # 主布局
@@ -629,17 +666,22 @@ class JobPage(QWidget):
         # 主布局：水平分割器
         main_layout = QHBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 0)
-        
+
         splitter = QSplitter(Qt.Orientation.Horizontal)
+        splitter.setStyleSheet("""
+            QSplitter::handle {
+                background-color: #202020;
+            }
+        """)
         main_layout.addWidget(splitter)
-        
+
         # 左侧：计划列表
         self._create_plan_list_panel(splitter)
-        
+
         # 右侧：计划详情
         self.detail_panel = PlanDetailPanel()
         splitter.addWidget(self.detail_panel)
-        
+
         # 设置分割比例
         splitter.setSizes([300, 700])  # 左侧300px，右侧700px
         splitter.setStretchFactor(0, 0)  # 左侧不拉伸
@@ -749,8 +791,18 @@ class JobPage(QWidget):
             self.plan_items.append(item)
             self.plan_list_layout.addWidget(item)
             
+        # 自动选择第一个计划（如果有计划的话）
+        if self.plan_items:
+            first_plan = self.plan_items[0]
+            self._on_plan_selected(first_plan.plan_id)
+            # 设置视觉选中状态
+            self._update_plan_selection(first_plan.plan_id)
+            
     def _on_plan_selected(self, plan_id):
         """计划选中事件"""
+        # 更新选中状态
+        self._update_plan_selection(plan_id)
+        
         # 模拟计划数据
         plan_data = {
             "name": f"计划 {plan_id}",
@@ -758,6 +810,11 @@ class JobPage(QWidget):
             "description": "示例训练计划"
         }
         self.detail_panel.set_plan_data(plan_id, plan_data)
+    
+    def _update_plan_selection(self, selected_plan_id):
+        """更新计划选择状态"""
+        for item in self.plan_items:
+            item.set_selected(item.plan_id == selected_plan_id)
         
     def _on_plan_delete_requested(self, plan_id):
         """计划删除请求"""
