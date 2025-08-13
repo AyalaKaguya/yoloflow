@@ -73,6 +73,20 @@ class BackendInfo:
         # 检查可用性
         is_available, unavailable_reason = backend.is_available(yoloflow_version)
         
+        # 为模型添加from_backend字段
+        models_with_backend = set()
+        for model in backend.available_models:
+            # 创建新的ModelInfo实例，添加from_backend字段
+            model_with_backend = ModelInfo(
+                name=model.name,
+                filename=model.filename,
+                parameters=model.parameters,
+                supported_tasks=model.supported_tasks,
+                description=model.description,
+                from_backend=backend.name
+            )
+            models_with_backend.add(model_with_backend)
+        
         return cls(
             name=backend.name,
             version=backend.version,
@@ -85,7 +99,7 @@ class BackendInfo:
             executable=backend.executable,
             extra_params=backend.extra_params.copy() if backend.extra_params else [],
             available_tasks=backend.available_tasks.copy() if backend.available_tasks else set(),
-            available_models=backend.available_models.copy() if backend.available_models else set(),
+            available_models=models_with_backend,
             module_path=module_path,
             is_installed=True,  # 如果能创建实例说明已安装
             instance=backend

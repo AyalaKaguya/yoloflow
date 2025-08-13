@@ -141,6 +141,14 @@ TODO：属于yoloflow的命令行启动参数，当指定项目时直接启动�
 3. `__init__.py`中通过继承BackendBase类来定义后端模块的基本信息，并导出一个YoloflowBackendModule(BackendBase)类供后端系统引入
 4. BackendManager类用于管理所有后端模块，提供加载、安装、卸载、查询这些主要功能，还提供整个后端系统支持的任务类型和提供的模型，采用BackendInfo作为管理时的核心类，同时需要把基本信息在解析完每个模块后同步到`backends`目录下对应同名的toml文件中（如`backends/ultralytics.toml`）。BackendManager在初始化的时候不要进行模块的加载，而是通过方法在外部加载，支持获取待加载列表一个一个加载。同时支持安装依赖功能，你需要在单独的线程中初始化虚拟环境、执行前处理函数、执行指令以调用uv安装依赖、执行后处理函数，并捕获异常来判断依赖是否安装成功。
 
+
+修改[ModelSelector](src\yoloflow\model\start_up\model_selector.py)，使其作为后端管理器的一个属性提供，将所有后端的模型整合到这个属性中，同时将[BackendManager](src/yoloflow/service/backend_manager.py)中用于提供模型的方法全部移走，不需要考虑兼容性。
+
+**数据集页面的基本数据绑定 Binding**
+
+
+
+
 ## 程序运行框图
 
 ```mermaid

@@ -4,23 +4,33 @@ Model selection and management for YOLOFlow projects.
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, List, Optional, Set, Any
+from typing import Dict, List, Optional, Set, Any, TYPE_CHECKING
 from ..enums import TaskType
 from .model_info import ModelInfo
+
+if TYPE_CHECKING:
+    from ...service.backend_manager import BackendManager
 
 
 class ModelSelector:
     """
     Model selection utility for YOLOFlow projects.
     
-    Manages a registry of available models and provides filtering
+    Manages a registry of available models from backend manager and provides filtering
     capabilities based on task type.
     """
     
-    def __init__(self):
-        """Initialize model selector with predefined model registry."""
+    def __init__(self, backend_manager: Optional['BackendManager'] = None):
+        """Initialize model selector with backend manager.
+        
+        Args:
+            backend_manager: Backend manager instance to get models from
+        """
+        self._backend_manager = backend_manager
         self._models: List[ModelInfo] = []
         self._register_default_models()
+        if self._backend_manager:
+            self._sync_from_backend_manager()
     
     def _register_default_models(self):
         """Register default YOLO models from YOLOv11 series."""
@@ -29,7 +39,7 @@ class ModelSelector:
             name="YOLO 11 Nano - 检测",
             filename="yolo11n.pt",
             parameters="2.6M",
-            supported_tasks={TaskType.DETECTION},
+            supported_tasks=frozenset({TaskType.DETECTION}),
             description="YOLOv11 最轻量级模型，适合移动设备和边缘计算"
         ))
         
@@ -37,7 +47,7 @@ class ModelSelector:
             name="YOLO 11 Nano - 分类",
             filename="yolo11n-cls.pt",
             parameters="2.6M",
-            supported_tasks={TaskType.CLASSIFICATION},
+            supported_tasks=frozenset({TaskType.CLASSIFICATION}),
             description="YOLOv11 Nano 分类模型，适合图像分类任务"
         ))
         
@@ -45,7 +55,7 @@ class ModelSelector:
             name="YOLO 11 Nano - 分割",
             filename="yolo11n-seg.pt",
             parameters="2.7M",
-            supported_tasks={TaskType.SEGMENTATION, TaskType.INSTANCE_SEGMENTATION},
+            supported_tasks=frozenset({TaskType.SEGMENTATION, TaskType.INSTANCE_SEGMENTATION}),
             description="YOLOv11 Nano 分割模型，支持语义分割和实例分割"
         ))
         
@@ -53,7 +63,7 @@ class ModelSelector:
             name="YOLO 11 Nano - 姿态估计",
             filename="yolo11n-pose.pt",
             parameters="2.9M",
-            supported_tasks={TaskType.KEYPOINT},
+            supported_tasks=frozenset({TaskType.KEYPOINT}),
             description="YOLOv11 Nano 姿态估计模型，用于关键点检测"
         ))
         
@@ -61,7 +71,7 @@ class ModelSelector:
             name="YOLO 11 Nano - 有向检测",
             filename="yolo11n-obb.pt",
             parameters="2.8M",
-            supported_tasks={TaskType.ORIENTED_DETECTION},
+            supported_tasks=frozenset({TaskType.ORIENTED_DETECTION}),
             description="YOLOv11 Nano 有向边界框检测模型"
         ))
         
@@ -70,7 +80,7 @@ class ModelSelector:
             name="YOLO 11 Small - 检测",
             filename="yolo11s.pt",
             parameters="9.4M",
-            supported_tasks={TaskType.DETECTION},
+            supported_tasks=frozenset({TaskType.DETECTION}),
             description="YOLOv11 小型模型，平衡速度和精度"
         ))
         
@@ -78,7 +88,7 @@ class ModelSelector:
             name="YOLO 11 Small - 分类",
             filename="yolo11s-cls.pt",
             parameters="9.4M",
-            supported_tasks={TaskType.CLASSIFICATION},
+            supported_tasks=frozenset({TaskType.CLASSIFICATION}),
             description="YOLOv11 Small 分类模型"
         ))
         
@@ -86,7 +96,7 @@ class ModelSelector:
             name="YOLO 11 Small - 分割",
             filename="yolo11s-seg.pt",
             parameters="9.5M",
-            supported_tasks={TaskType.SEGMENTATION, TaskType.INSTANCE_SEGMENTATION},
+            supported_tasks=frozenset({TaskType.SEGMENTATION, TaskType.INSTANCE_SEGMENTATION}),
             description="YOLOv11 Small 分割模型"
         ))
         
@@ -94,7 +104,7 @@ class ModelSelector:
             name="YOLO 11 Small - 姿态估计",
             filename="yolo11s-pose.pt",
             parameters="9.7M",
-            supported_tasks={TaskType.KEYPOINT},
+            supported_tasks=frozenset({TaskType.KEYPOINT}),
             description="YOLOv11 Small 姿态估计模型"
         ))
         
@@ -102,7 +112,7 @@ class ModelSelector:
             name="YOLO 11 Small - 有向检测",
             filename="yolo11s-obb.pt",
             parameters="9.6M",
-            supported_tasks={TaskType.ORIENTED_DETECTION},
+            supported_tasks=frozenset({TaskType.ORIENTED_DETECTION}),
             description="YOLOv11 Small 有向边界框检测模型"
         ))
         
@@ -111,7 +121,7 @@ class ModelSelector:
             name="YOLO 11 Medium - 检测",
             filename="yolo11m.pt",
             parameters="20.1M",
-            supported_tasks={TaskType.DETECTION},
+            supported_tasks=frozenset({TaskType.DETECTION}),
             description="YOLOv11 中型模型，更高精度"
         ))
         
@@ -119,7 +129,7 @@ class ModelSelector:
             name="YOLO 11 Medium - 分类",
             filename="yolo11m-cls.pt",
             parameters="20.1M",
-            supported_tasks={TaskType.CLASSIFICATION},
+            supported_tasks=frozenset({TaskType.CLASSIFICATION}),
             description="YOLOv11 Medium 分类模型"
         ))
         
@@ -127,7 +137,7 @@ class ModelSelector:
             name="YOLO 11 Medium - 分割",
             filename="yolo11m-seg.pt",
             parameters="22.5M",
-            supported_tasks={TaskType.SEGMENTATION, TaskType.INSTANCE_SEGMENTATION},
+            supported_tasks=frozenset({TaskType.SEGMENTATION, TaskType.INSTANCE_SEGMENTATION}),
             description="YOLOv11 Medium 分割模型"
         ))
         
@@ -135,7 +145,7 @@ class ModelSelector:
             name="YOLO 11 Medium - 姿态估计",
             filename="yolo11m-pose.pt",
             parameters="20.9M",
-            supported_tasks={TaskType.KEYPOINT},
+            supported_tasks=frozenset({TaskType.KEYPOINT}),
             description="YOLOv11 Medium 姿态估计模型"
         ))
         
@@ -143,7 +153,7 @@ class ModelSelector:
             name="YOLO 11 Medium - 有向检测",
             filename="yolo11m-obb.pt",
             parameters="20.9M",
-            supported_tasks={TaskType.ORIENTED_DETECTION},
+            supported_tasks=frozenset({TaskType.ORIENTED_DETECTION}),
             description="YOLOv11 Medium 有向边界框检测模型"
         ))
         
@@ -152,7 +162,7 @@ class ModelSelector:
             name="YOLO 11 Large - 检测",
             filename="yolo11l.pt",
             parameters="25.3M",
-            supported_tasks={TaskType.DETECTION},
+            supported_tasks=frozenset({TaskType.DETECTION}),
             description="YOLOv11 大型模型，高精度应用"
         ))
         
@@ -160,7 +170,7 @@ class ModelSelector:
             name="YOLO 11 Large - 分类",
             filename="yolo11l-cls.pt",
             parameters="25.3M",
-            supported_tasks={TaskType.CLASSIFICATION},
+            supported_tasks=frozenset({TaskType.CLASSIFICATION}),
             description="YOLOv11 Large 分类模型"
         ))
         
@@ -168,7 +178,7 @@ class ModelSelector:
             name="YOLO 11 Large - 分割",
             filename="yolo11l-seg.pt",
             parameters="27.6M",
-            supported_tasks={TaskType.SEGMENTATION, TaskType.INSTANCE_SEGMENTATION},
+            supported_tasks=frozenset({TaskType.SEGMENTATION, TaskType.INSTANCE_SEGMENTATION}),
             description="YOLOv11 Large 分割模型"
         ))
         
@@ -176,7 +186,7 @@ class ModelSelector:
             name="YOLO 11 Large - 姿态估计",
             filename="yolo11l-pose.pt",
             parameters="26.2M",
-            supported_tasks={TaskType.KEYPOINT},
+            supported_tasks=frozenset({TaskType.KEYPOINT}),
             description="YOLOv11 Large 姿态估计模型"
         ))
         
@@ -184,7 +194,7 @@ class ModelSelector:
             name="YOLO 11 Large - 有向检测",
             filename="yolo11l-obb.pt",
             parameters="26.2M",
-            supported_tasks={TaskType.ORIENTED_DETECTION},
+            supported_tasks=frozenset({TaskType.ORIENTED_DETECTION}),
             description="YOLOv11 Large 有向边界框检测模型"
         ))
         
@@ -193,7 +203,7 @@ class ModelSelector:
             name="YOLO 11 Extra Large - 检测",
             filename="yolo11x.pt",
             parameters="56.9M",
-            supported_tasks={TaskType.DETECTION},
+            supported_tasks=frozenset({TaskType.DETECTION}),
             description="YOLOv11 超大型模型，最高精度"
         ))
         
@@ -201,7 +211,7 @@ class ModelSelector:
             name="YOLO 11 Extra Large - 分类",
             filename="yolo11x-cls.pt",
             parameters="56.9M",
-            supported_tasks={TaskType.CLASSIFICATION},
+            supported_tasks=frozenset({TaskType.CLASSIFICATION}),
             description="YOLOv11 Extra Large 分类模型"
         ))
         
@@ -209,7 +219,7 @@ class ModelSelector:
             name="YOLO 11 Extra Large - 分割",
             filename="yolo11x-seg.pt",
             parameters="58.8M",
-            supported_tasks={TaskType.SEGMENTATION, TaskType.INSTANCE_SEGMENTATION},
+            supported_tasks=frozenset({TaskType.SEGMENTATION, TaskType.INSTANCE_SEGMENTATION}),
             description="YOLOv11 Extra Large 分割模型"
         ))
         
@@ -217,7 +227,7 @@ class ModelSelector:
             name="YOLO 11 Extra Large - 姿态估计",
             filename="yolo11x-pose.pt",
             parameters="58.2M",
-            supported_tasks={TaskType.KEYPOINT},
+            supported_tasks=frozenset({TaskType.KEYPOINT}),
             description="YOLOv11 Extra Large 姿态估计模型"
         ))
         
@@ -225,9 +235,38 @@ class ModelSelector:
             name="YOLO 11 Extra Large - 有向检测",
             filename="yolo11x-obb.pt",
             parameters="58.2M",
-            supported_tasks={TaskType.ORIENTED_DETECTION},
+            supported_tasks=frozenset({TaskType.ORIENTED_DETECTION}),
             description="YOLOv11 Extra Large 有向边界框检测模型"
         ))
+    
+    def _sync_from_backend_manager(self):
+        """Sync models from backend manager."""
+        if not self._backend_manager:
+            return
+        
+        # Get all models from backend manager
+        backend_models = self._backend_manager.get_supported_models()
+        for model in backend_models:
+            # Backend models are added directly (they have from_backend field)
+            # They may have the same filename as default models but provide backend-specific functionality
+            self._models.append(model)
+    
+    def set_backend_manager(self, backend_manager: 'BackendManager'):
+        """Set backend manager and sync models.
+        
+        Args:
+            backend_manager: Backend manager instance
+        """
+        self._backend_manager = backend_manager
+        self._sync_from_backend_manager()
+    
+    def refresh_models(self):
+        """Refresh models from backend manager."""
+        if self._backend_manager:
+            # Remove existing backend models first
+            self._models = [m for m in self._models if not m.from_backend]
+            # Add current backend models
+            self._sync_from_backend_manager()
     
     def register_model(self, model_info: ModelInfo):
         """

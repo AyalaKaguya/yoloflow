@@ -18,7 +18,7 @@ from dataclasses import asdict
 
 from ..model.backend import BackendBase, BackendInfo
 from ..model.enums import TaskType
-from ..model.start_up import ModelInfo
+from ..model.start_up import ModelInfo, ModelSelector
 from ..__version__ import __version__ as yoloflow_version
 
 class BackendManager:
@@ -36,6 +36,9 @@ class BackendManager:
         # 后端信息存储
         self._backend_infos: Dict[str, BackendInfo] = {}
         self._loaded_backends: Dict[str, BackendBase] = {}
+        
+        # 模型选择器
+        self.model_selector = ModelSelector(self)
         
         # 扫描后端目录
         self._scan_backend_directories()
@@ -167,6 +170,9 @@ class BackendManager:
                 
                 # 保存更新的信息到toml文件
                 self._save_backend_info_to_toml(backend_name, updated_info)
+                
+                # 刷新模型选择器
+                self.model_selector.refresh_models()
                 
                 return True
             else:
@@ -314,14 +320,6 @@ class BackendManager:
                 all_tasks.update(info.available_tasks)
         return all_tasks
     
-    def get_supported_models(self) -> Set[ModelInfo]:
-        """获取所有后端支持的模型"""
-        all_models = set()
-        for info in self._backend_infos.values():
-            if info.is_available and info.is_installed:
-                all_models.update(info.available_models)
-        return all_models
-    
     def get_backends_for_task(self, task_type: TaskType) -> List[BackendInfo]:
         """获取支持指定任务类型的后端"""
         result = []
@@ -330,8 +328,18 @@ class BackendManager:
                 result.append(info)
         return result
     
+    def get_supported_models(self) -> Set[ModelInfo]:
+        """获取所有后端支持的模型 - 内部使用，供ModelSelector调用"""
+        all_models = set()
+        for info in self._backend_infos.values():
+            if info.is_available and info.is_installed:
+                all_models.update(info.available_models)
+        return all_models
+    
     def refresh_backends(self):
         """刷新后端列表"""
         self._backend_infos.clear()
         self._loaded_backends.clear()
         self._scan_backend_directories()
+        # 刷新模型选择器
+        self.model_selector.refresh_models()
