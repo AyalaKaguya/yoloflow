@@ -36,7 +36,15 @@ class BackendInfo:
     """后端链接网页"""
     
     # TODO：后端位置等其他非抽象类定义的属性
+    module_path: Optional[str] = None
+    """后端模块路径"""
+
+    is_installed: bool = False
+    """后端是否已安装"""
     
+    instance: Optional[BackendBase] = None
+    """后端实例，这个属性不要导出"""
+
     @classmethod
     def from_backend(cls, backend: BackendBase) -> 'BackendInfo':
         """从BackendBase实例创建BackendInfo"""

@@ -130,7 +130,16 @@ CreateProjectWizard还有最后一个问题没有解决：当你使用tab栏切�
 
 业务模块是典型的控制器架构，即yoloflow是MVC架构设计，而通过以上的形式可以确保依赖倒置，这样就不会掣肘于某个具体的框架。
 
-TODO：属于yoloflow的命令行启动参数，当指定项目时直接启动工作室，当为指定时启动项目管理器，而启动工作室前才需要加载splash screen。而我们还需要
+TODO：属于yoloflow的命令行启动参数，当指定项目时直接启动工作室，当为指定时启动项目管理器，而启动工作室前才需要加载splash screen。
+
+**后端系统 Backend System**
+
+后端系统负责对不同的训练框架进行抽象（如Ultralytics、Detectron2等），提供统一的接口和调用方式。后端系统的逻辑满足以下要求：
+
+1. 所有后端文件存储在工作目录下的`backends`文件夹中，其中每一个后端都应该是一个uv项目，同时在根目录层级也是yoloflow的一个模块。
+2. 假如我们有一个ultralytics模块，其存放在`backends/ultralytics`目录下，在这个模块文件夹下至少包含：`src`目录用于存放yoloflow具体某个后端的执行逻辑、`pyproject.toml`定义后端模块的依赖和项目结构、`__init__.py`用于将该目录标记为一个Python包供yoloflow上位机引用。
+3. `__init__.py`中通过继承BackendBase类来定义后端模块的基本信息，并导出一个YoloflowBackendModule(BackendBase)类供后端系统引入
+4. BackendManager类用于管理所有后端模块，提供加载、安装、卸载、查询这些主要功能，还提供整个后端系统支持的任务类型和提供的模型，采用BackendInfo作为管理时的核心类，同时需要把基本信息在解析完每个模块后同步到`backends`目录下对应同名的toml文件中（如`backends/ultralytics.toml`）。BackendManager在初始化的时候不要进行模块的加载，而是通过方法在外部加载，支持获取待加载列表一个一个加载。同时支持安装依赖功能，你需要在单独的线程中初始化虚拟环境、执行前处理函数、执行指令以调用uv安装依赖、执行后处理函数，并捕获异常来判断依赖是否安装成功。
 
 ## 程序运行框图
 
