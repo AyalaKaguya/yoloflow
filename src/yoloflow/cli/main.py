@@ -5,12 +5,27 @@ Main entry point for YOLOFlow CLI.
 import sys
 import argparse
 from pathlib import Path
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QMessageBox
 from ..ui import SplashScreen, ProjectManagerWindow, WorkspaceWindow
 from ..service import ProjectManager
 from ..__version__ import __version__ as version
 
 from typing import Optional
+
+
+def show_error_dialog(parent, title: str, message: str, details: Optional[str] = None):
+    """显示错误对话框"""
+    msg_box = QMessageBox(parent)
+    msg_box.setIcon(QMessageBox.Icon.Critical)
+    msg_box.setWindowTitle(title)
+    msg_box.setText(message)
+    
+    if details:
+        msg_box.setDetailedText(f"详细错误信息:\n{details}")
+    
+    msg_box.setStandardButtons(QMessageBox.StandardButton.Ok)
+    msg_box.setMinimumWidth(400)  # 设置对话框最小宽度
+    msg_box.exec()
 
 
 def parse_args():
@@ -74,15 +89,49 @@ def start_application(target_project_path: Optional[str] = None):
                     # 项目管理器窗口不显示
                     return
                     
+                except FileNotFoundError as e:
+                    show_error_dialog(
+                        None,
+                        "项目不存在",
+                        f"指定的项目不存在或已被移动：\n{target_project_path}",
+                        f"请检查项目路径是否正确，或在项目管理器中重新选择项目"
+                    )
+                    # 回退到显示项目管理器
+                except ValueError as e:
+                    show_error_dialog(
+                        None,
+                        "无效的项目",
+                        f"指定的目录不是有效的YOLOFlow项目：\n{target_project_path}",
+                        f"错误详情：{str(e)}\n\n请确认目录中包含正确的yoloflow.toml配置文件"
+                    )
+                    # 回退到显示项目管理器
+                except PermissionError as e:
+                    show_error_dialog(
+                        None,
+                        "权限不足",
+                        f"没有权限访问项目目录：\n{target_project_path}",
+                        f"请检查目录权限或以管理员身份运行程序"
+                    )
+                    # 回退到显示项目管理器
                 except Exception as e:
-                    print(f"打开项目失败: {e}")
+                    show_error_dialog(
+                        None,
+                        "打开项目失败",
+                        f"无法打开项目：\n{target_project_path}",
+                        f"未知错误：{str(e)}\n\n请检查项目文件是否完整或联系技术支持"
+                    )
                     # 回退到显示项目管理器
             
             # 显示项目管理器
             project_manager_window.show()
             
         except Exception as e:
-            print(f"启动失败: {e}")
+            show_error_dialog(
+                None,
+                "应用启动失败",
+                "YOLOFlow启动时发生错误",
+                f"错误详情：{str(e)}"
+            )
             sys.exit(1)
     
     # 连接启动画面完成信号
