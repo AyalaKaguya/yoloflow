@@ -8,7 +8,7 @@ import zipfile
 from pathlib import Path
 import shutil
 
-from yoloflow.model import Project, DatasetManager, DatasetInfo, DatasetType, TaskType
+from yoloflow.model import Project, ProjectDatasetManager, DatasetInfo, DatasetType, TaskType
 
 
 class TestDatasetManager:
@@ -61,7 +61,7 @@ class TestDatasetManager:
         """Test dataset manager initialization."""
         dataset_manager = temp_project.dataset_manager
         
-        assert isinstance(dataset_manager, DatasetManager)
+        assert isinstance(dataset_manager, ProjectDatasetManager)
         assert dataset_manager.dataset_dir.exists()
         assert dataset_manager.project_path == temp_project.project_path
         assert len(dataset_manager.datasets) == 0
@@ -283,7 +283,7 @@ class TestDatasetManager:
         temp_project.config._config_data["datasets"]["detailed"] = []
         
         # Reinitialize dataset manager to trigger migration
-        dm_new = DatasetManager(temp_project.project_path, temp_project.config)
+        dm_new = ProjectDatasetManager(temp_project.project_path, temp_project.config)
         
         # Check that datasets were migrated
         datasets = dm_new.datasets

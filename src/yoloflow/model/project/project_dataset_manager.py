@@ -16,7 +16,7 @@ from ..enums import DatasetType
 
 
 
-class DatasetManager:
+class ProjectDatasetManager:
     """
     Manages datasets within a YOLOFlow project.
     

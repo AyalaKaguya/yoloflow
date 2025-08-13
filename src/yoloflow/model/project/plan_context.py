@@ -14,7 +14,7 @@ except ImportError:
 import tomli_w
 
 from ..enums import TaskType
-from .dataset_config import DatasetConfig, DatasetTarget
+from .plan_dataset_config import PlanDatasetConfig, DatasetTarget
 from .training_parameters import TrainingParameters
 from .validation_parameters import ValidationParameters
 from .training_results import TrainingResults
@@ -55,7 +55,7 @@ class PlanContext:
         # Default parameters
         self.training_params = TrainingParameters()
         self.validation_params = ValidationParameters()
-        self.datasets: List[DatasetConfig] = []
+        self.datasets: List[PlanDatasetConfig] = []
         self.results = TrainingResults()
         
         # Metadata
@@ -131,7 +131,7 @@ class PlanContext:
             
             # Load datasets
             if "datasets" in data:
-                plan.datasets = [DatasetConfig.from_dict(d) for d in data["datasets"]]
+                plan.datasets = [PlanDatasetConfig.from_dict(d) for d in data["datasets"]]
             
             # Load results
             if "results" in data:
@@ -178,7 +178,7 @@ class PlanContext:
     
     def add_dataset(self, dataset_name: str, target: DatasetTarget):
         """Add a dataset to the training plan."""
-        dataset_config = DatasetConfig(name=dataset_name, target=target)
+        dataset_config = PlanDatasetConfig(name=dataset_name, target=target)
         
         # Remove existing dataset with same name
         self.datasets = [d for d in self.datasets if d.name != dataset_name]
@@ -212,11 +212,11 @@ class PlanContext:
         if latest_model is not None:
             self.results.latest_model = latest_model
     
-    def get_dataset_configs(self) -> List[DatasetConfig]:
+    def get_dataset_configs(self) -> List[PlanDatasetConfig]:
         """Get all dataset configurations."""
         return self.datasets.copy()
     
-    def get_dataset_by_target(self, target: DatasetTarget) -> List[DatasetConfig]:
+    def get_dataset_by_target(self, target: DatasetTarget) -> List[PlanDatasetConfig]:
         """Get datasets by target type."""
         return [d for d in self.datasets if d.target == target]
     

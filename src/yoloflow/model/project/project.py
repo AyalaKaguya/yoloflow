@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Optional, Union, List, Dict, Any
 
 from .project_config import ProjectConfig, TaskType
-from .dataset_manager import DatasetManager
+from .project_dataset_manager import ProjectDatasetManager
 from .project_model_manager import ProjectModelManager
 from .project_plan_manager import ProjectPlanManager
 
@@ -55,7 +55,7 @@ class Project:
         self.config = ProjectConfig(config_path)
         
         # Initialize dataset manager
-        self.dataset_manager = DatasetManager(self.project_path, self.config)
+        self.dataset_manager = ProjectDatasetManager(self.project_path, self.config)
         
         # Initialize model manager
         self.model_manager = ProjectModelManager(self.project_path, self.config)

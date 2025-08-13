@@ -34,7 +34,7 @@ class ProjectManager:
             db_path: Path to SQLite database file. If None, uses 'yoloflow.db' in current directory.
         """
         if db_path is None:
-            db_path = Path.cwd() / "yoloflow.db"
+            db_path = str(Path.cwd() / "yoloflow.db")
         
         self.db_path = Path(db_path) if db_path != ":memory:" else ":memory:"
         self._conn = None  # For memory database persistence

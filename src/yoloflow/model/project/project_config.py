@@ -4,7 +4,6 @@ Project configuration management for YOLOFlow projects.
 
 import json
 from datetime import datetime
-from ..enums import TaskType
 from pathlib import Path
 from typing import Dict, List, Optional, Any, Union
 
@@ -14,6 +13,7 @@ except ImportError:
     import tomli as tomllib
 import tomli_w
 
+from ..enums import TaskType, PlanStatus
 from .project_model_info import ProjectModelInfo
 from .plan_info import PlanInfo
 
@@ -267,7 +267,7 @@ class ProjectConfig:
                 return plan_info
         return None
     
-    def update_plan_status(self, plan_id: str, status: str):
+    def update_plan_status(self, plan_id: str, status: PlanStatus):
         """Update plan status."""
         plan_info = self.get_plan_info(plan_id)
         if plan_info:

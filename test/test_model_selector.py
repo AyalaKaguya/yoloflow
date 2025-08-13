@@ -3,7 +3,7 @@ Test model selector functionality.
 """
 
 import pytest
-from yoloflow.model import ModelSelector, ModelInfo, TaskType, get_model_selector, register_custom_model
+from yoloflow.model import ModelSelector, ModelInfo, TaskType
 
 
 class TestModelInfo:
@@ -223,45 +223,6 @@ class TestModelSelector:
         # Should have same count as direct filtering
         detection_models = selector.get_models_for_task(TaskType.DETECTION)
         assert detection_count == len(detection_models)
-
-
-class TestGlobalModelSelector:
-    """Test cases for global model selector functionality."""
-    
-    def test_get_model_selector_singleton(self):
-        """Test that get_model_selector returns singleton."""
-        selector1 = get_model_selector()
-        selector2 = get_model_selector()
-        
-        # Should be the same instance
-        assert selector1 is selector2
-        
-        # Should have default models loaded
-        assert selector1.get_model_count() > 0
-    
-    def test_register_custom_model_global(self):
-        """Test registering custom model globally."""
-        selector = get_model_selector()
-        initial_count = selector.get_model_count()
-        
-        # Register custom model
-        register_custom_model(
-            name="Global Custom Model",
-            filename="global_custom.pt",
-            parameters="7.8M",
-            supported_tasks=[TaskType.DETECTION, TaskType.CLASSIFICATION],
-            description="Globally registered custom model"
-        )
-        
-        # Should be registered
-        assert selector.get_model_count() == initial_count + 1
-        
-        # Should be retrievable
-        model = selector.get_model_by_name("Global Custom Model")
-        assert model is not None
-        assert model.filename == "global_custom.pt"
-        assert model.supports_task(TaskType.DETECTION)
-        assert model.supports_task(TaskType.CLASSIFICATION)
 
 
 class TestModelSelectorWithTaskTypes:

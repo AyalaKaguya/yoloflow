@@ -9,10 +9,10 @@ from .start_up import *
 
 __all__ = [
     'Project', 'ProjectConfig', 'TaskType', 
-    'DatasetManager', 'DatasetInfo', 'DatasetType',
-    'ModelSelector', 'ModelInfo', 'get_model_selector', 'register_custom_model',
-    'TaskTypeProvider', 'TaskInfo', 'get_task_provider', 'register_custom_task',
+    'ProjectDatasetManager', 'DatasetInfo', 'DatasetType',
+    'ModelSelector', 'ModelInfo',
+    'TaskTypeProvider', 'TaskInfo',
     'ProjectModelManager', 'ProjectPlanManager', 'PlanContext',
-    'DatasetTarget', 'DatasetConfig', 'TrainingParameters', 
+    'DatasetTarget', 'PlanDatasetConfig', 'TrainingParameters', 
     'ValidationParameters', 'TrainingResults',
 ]

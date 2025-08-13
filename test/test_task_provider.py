@@ -4,8 +4,7 @@ Test task type provider functionality.
 
 import pytest
 from yoloflow.model import (
-    TaskTypeProvider, TaskInfo, TaskType, get_task_provider, 
-    register_custom_task
+    TaskTypeProvider, TaskInfo, TaskType
 )
 
 
@@ -226,95 +225,3 @@ class TestTaskTypeProvider:
         assert not provider.is_task_registered(TaskType.KEYPOINT)
         assert provider.get_task_info(TaskType.KEYPOINT) is None
 
-
-class TestGlobalTaskProvider:
-    """Test cases for global task provider functionality."""
-    
-    def test_get_task_provider_singleton(self):
-        """Test that get_task_provider returns singleton."""
-        provider1 = get_task_provider()
-        provider2 = get_task_provider()
-        
-        # Should be the same instance
-        assert provider1 is provider2
-        
-        # Should have default tasks loaded
-        assert provider1.get_task_count() == 6
-    
-    def test_register_custom_task_global(self):
-        """Test registering custom task globally."""
-        provider = get_task_provider()
-        
-        # Get original detection task info
-        original_detection = provider.get_task_info(TaskType.DETECTION)
-        assert original_detection is not None  # Should exist
-        original_name = original_detection.name
-        
-        # Register custom task (replaces existing)
-        register_custom_task(
-            task_type=TaskType.DETECTION,
-            name="全局自定义检测",
-            description="全局注册的自定义检测任务",
-            example_image="global_detection.jpg"
-        )
-        
-        # Should be registered
-        updated_detection = provider.get_task_info(TaskType.DETECTION)
-        assert updated_detection is not None
-        assert updated_detection.name == "全局自定义检测"
-        assert updated_detection.description == "全局注册的自定义检测任务"
-        assert updated_detection.example_image == "global_detection.jpg"
-        
-        # Restore original (for other tests)
-        provider.register_task(original_detection)
-
-
-class TestTaskProviderIntegration:
-    """Integration tests for task provider."""
-    
-    def test_all_task_types_have_chinese_names(self):
-        """Test that all tasks have proper Chinese names."""
-        provider = get_task_provider()
-        
-        for task_type in TaskType:
-            task_info = provider.get_task_info(task_type)
-            assert task_info is not None
-            
-            # Name should contain Chinese characters
-            assert any('\u4e00' <= char <= '\u9fff' for char in task_info.name)
-            
-            # Description should be substantial
-            assert len(task_info.description) > 20
-    
-    def test_task_descriptions_are_informative(self):
-        """Test that task descriptions are informative."""
-        provider = get_task_provider()
-        
-        # Key terms that should appear in descriptions
-        expected_terms = {
-            TaskType.CLASSIFICATION: ["分类", "类别"],
-            TaskType.DETECTION: ["检测", "边界框", "定位"],
-            TaskType.SEGMENTATION: ["分割", "像素", "语义"],
-            TaskType.INSTANCE_SEGMENTATION: ["实例", "分割", "区分"],
-            TaskType.KEYPOINT: ["关键点", "姿态", "关节"],
-            TaskType.ORIENTED_DETECTION: ["旋转", "有向", "方向"]
-        }
-        
-        for task_type, terms in expected_terms.items():
-            task_info = provider.get_task_info(task_type)
-            assert task_info is not None
-            description = task_info.description
-            
-            # At least one expected term should be in description
-            assert any(term in description for term in terms), \
-                f"No expected terms found in {task_type} description: {description}"
-    
-    def test_consistent_task_ordering(self):
-        """Test that task ordering is consistent across calls."""
-        provider = get_task_provider()
-        
-        order1 = [task.task_type for task in provider.get_all_tasks()]
-        order2 = [task.task_type for task in provider.get_all_tasks()]
-        
-        # Should be identical
-        assert order1 == order2

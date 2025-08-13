@@ -377,49 +377,5 @@ class ModelSelector:
     
     def __repr__(self) -> str:
         return self.__str__()
-
-
-# Global model selector instance
-_global_model_selector = None
-
-
-def get_model_selector() -> ModelSelector:
-    """
-    Get the global model selector instance.
     
-    Returns:
-        Global ModelSelector instance
-    """
-    global _global_model_selector
-    if _global_model_selector is None:
-        _global_model_selector = ModelSelector()
-    return _global_model_selector
-
-
-def register_custom_model(
-    name: str,
-    filename: str,
-    parameters: str,
-    supported_tasks: List[TaskType],
-    description: str
-) -> None:
-    """
-    Register a custom model in the global selector.
     
-    Args:
-        name: Display name of the model
-        filename: Model file name
-        parameters: Parameter count description
-        supported_tasks: List of supported task types
-        description: Model description
-    """
-    model_info = ModelInfo(
-        name=name,
-        filename=filename,
-        parameters=parameters,
-        supported_tasks=set(supported_tasks),
-        description=description
-    )
-    
-    selector = get_model_selector()
-    selector.register_model(model_info)

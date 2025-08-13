@@ -7,7 +7,7 @@ from typing import Dict, Any
 from ..enums import DatasetTarget
 
 @dataclass
-class DatasetConfig:
+class PlanDatasetConfig:
     """Configuration for a dataset in training plan."""
     name: str                # Dataset name
     target: DatasetTarget    # How to use this dataset
@@ -20,7 +20,7 @@ class DatasetConfig:
         }
     
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "DatasetConfig":
+    def from_dict(cls, data: Dict[str, Any]) -> "PlanDatasetConfig":
         """Create from dictionary."""
         return cls(
             name=data["name"],

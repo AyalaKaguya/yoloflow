@@ -1,7 +1,7 @@
-from .model_selector import ModelSelector, ModelInfo, get_model_selector, register_custom_model
-from .task_provider import TaskTypeProvider, TaskType, TaskInfo, get_task_provider, register_custom_task
+from .model_selector import ModelSelector, ModelInfo
+from .task_provider import TaskTypeProvider, TaskType, TaskInfo
 
 __all__ = [
-    'ModelSelector', 'ModelInfo', 'get_model_selector', 'register_custom_model',
-    'TaskTypeProvider', 'TaskType', 'TaskInfo', 'get_task_provider', 'register_custom_task'
+    'ModelSelector', 'ModelInfo',
+    'TaskTypeProvider', 'TaskType', 'TaskInfo'
 ]

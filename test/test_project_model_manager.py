@@ -13,7 +13,7 @@ from yoloflow.model import (
     ProjectPlanManager,
     PlanContext,
     DatasetTarget,
-    DatasetConfig,
+    PlanDatasetConfig,
     TrainingParameters,
     ValidationParameters,
     TrainingResults,
@@ -37,13 +37,13 @@ class TestDatasetConfig:
     
     def test_create_dataset_config(self):
         """Test creating dataset config."""
-        config = DatasetConfig("test_dataset", DatasetTarget.TRAIN)
+        config = PlanDatasetConfig("test_dataset", DatasetTarget.TRAIN)
         assert config.name == "test_dataset"
         assert config.target == DatasetTarget.TRAIN
     
     def test_to_dict(self):
         """Test converting to dictionary."""
-        config = DatasetConfig("test_dataset", DatasetTarget.VAL)
+        config = PlanDatasetConfig("test_dataset", DatasetTarget.VAL)
         data = config.to_dict()
         assert data == {
             "name": "test_dataset",
@@ -53,7 +53,7 @@ class TestDatasetConfig:
     def test_from_dict(self):
         """Test creating from dictionary."""
         data = {"name": "test_dataset", "target": "test"}
-        config = DatasetConfig.from_dict(data)
+        config = PlanDatasetConfig.from_dict(data)
         assert config.name == "test_dataset"
         assert config.target == DatasetTarget.TEST
 
