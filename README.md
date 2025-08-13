@@ -195,3 +195,31 @@ flowchart TD
     PP --> BI --> UI
     BE --> BI
 ```
+
+## 后端训练逻辑
+
+```mermaid
+graph TD
+    subgraph P1 [Framework Agnostic]
+        Data[图像数据]
+        Annotations[标注数据<br/>e.g., COCO JSON]
+    end
+
+    subgraph Training Tasks
+        T1(训练任务1)
+        T2(训练任务2)
+        T3(训练任务3)
+    end
+    
+    P1 --> T1
+    P1 --> T2
+    P1 --> T3
+
+    T1 -- Uses --> BE1[后端: Ultralytics<br/>模型: YOLOv8s]
+    T2 -- Uses --> BE1_alt[后端: Ultralytics<br/>模型: YOLOv8x]
+    T3 -- Uses --> BE2[后端: Detectron2<br/>模型: Faster R-CNN]
+
+    BE1 --> R1[结果1: yolov8s.pt]
+    BE1_alt --> R2[结果2: yolov8x.pt]
+    BE2 --> R3[结果3: d2_model.pth]
+```

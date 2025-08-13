@@ -3,7 +3,9 @@
 """
 
 from .backend_base import BackendBase
+from .backend_info import BackendInfo
 
 __all__ = [
-    "BackendBase"
+    "BackendBase",
+    "BackendInfo"
 ]

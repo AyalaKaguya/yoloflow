@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Optional
-from ..enums import BackendUnavailableReason
+from ..enums import BackendUnavailableReason, TaskType
+from ..start_up import ModelInfo, TaskInfo
 
 
 class BackendBase(ABC):
@@ -77,5 +78,21 @@ class BackendBase(ABC):
     
     # ============================== 后端能力 ==============================
     
+    @property
+    @abstractmethod
+    def available_tasks(self) -> set[TaskType]:
+        """返回后端支持的任务类型"""
+        pass
+
+    @property
+    @abstractmethod
+    def available_models(self) -> set[ModelInfo]:
+        """返回后端支持的模型信息"""
+        pass
+    
+    @abstractmethod
+    def get_download_link(self, model: ModelInfo) -> Optional[str]:
+        """获取模型的下载链接"""
+        pass
     
     
