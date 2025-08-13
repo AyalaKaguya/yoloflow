@@ -34,16 +34,14 @@ class BackendBase(ABC):
         pass
 
     @property
-    @abstractmethod
-    def description(self) -> Optional[str]:
+    def description(self) -> str:
         """该属性应当返回后端的描述"""
-        pass
+        return ""
 
     @property
-    @abstractmethod
-    def linked_page(self) -> Optional[str]:
+    def linked_page(self) -> str:
         """该属性应当返回后端的链接网页"""
-        pass
+        return ""
 
     @abstractmethod
     def is_available(self, yoloflow_version: str) -> tuple[bool, BackendUnavailableReason | None]:
@@ -54,12 +52,10 @@ class BackendBase(ABC):
     
     # 一个项目的根目录下除了有要以模块形式加载的__init__.py以外，还要有完整的一个pyproject.toml、src
     
-    @abstractmethod
     def pre_install(self, backend_dir: str) -> None:
         """yoloflow会使用uv venv创建虚拟环境，但是此时还未正式开始安装依赖，你可以执行一些前置操作"""
         pass
     
-    @abstractmethod
     def post_install(self, backend_dir: str) -> None:
         """后端在安装完成过后可以进行一些检查以判断后端是否可用，通过抛出异常可以使得yoloflow认为后端存在问题"""
         pass
@@ -71,10 +67,9 @@ class BackendBase(ABC):
         pass
     
     @property
-    @abstractmethod
     def extra_params(self) -> list[str]:
         """后端执行的额外参数，后续yoloflow会以`uv run <executable> [params]`来调用和启动后端"""
-        pass
+        return []
     
     # ============================== 后端能力 ==============================
     
@@ -94,5 +89,9 @@ class BackendBase(ABC):
     def get_download_link(self, model: ModelInfo) -> Optional[str]:
         """获取模型的下载链接"""
         pass
+
+    def process_cli_args(self, args: list[str]) -> list[str]:
+        """处理并返回命令行参数，默认不做修改"""
+        return args
     
-    
+

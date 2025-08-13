@@ -6,6 +6,7 @@ Contains data models and configuration classes.
 from .project import *
 from .enums import *
 from .start_up import *
+from .backend import *
 
 __all__ = [
     'Project', 'ProjectConfig', 'TaskType', 
@@ -15,4 +16,5 @@ __all__ = [
     'ProjectModelManager', 'ProjectPlanManager', 'PlanContext',
     'DatasetTarget', 'PlanDatasetConfig', 'TrainingParameters', 
     'ValidationParameters', 'TrainingResults',
+    'BackendBase', 'BackendInfo', 
 ]
