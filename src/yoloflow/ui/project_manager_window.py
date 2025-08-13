@@ -28,9 +28,9 @@ from .workspace_window import WorkspaceWindow
 class ProjectManagerWindow(QMainWindow):
     """项目管理器主界面"""
 
-    def __init__(self):
+    def __init__(self, project_manager: ProjectManager):
         super().__init__()
-        self.project_manager = ProjectManager()
+        self.project_manager = project_manager  # 注入ProjectManager实例
         self._setup_ui()
         self._load_recent_projects()
 
@@ -337,19 +337,23 @@ class ProjectManagerWindow(QMainWindow):
     
     def _open_workspace(self, project):
         """打开工作区窗口"""
-        # 创建工作区窗口
-        self.workspace_window = WorkspaceWindow(project, self.project_manager, None)
-        self.workspace_window.closed.connect(self._on_workspace_closed)
-        self.workspace_window.show()
-        
-        # 关闭项目管理器
+        print("[WorkspaceManager] _open_workspace")
+        self.workspace_window = WorkspaceWindow(project, self.project_manager)
         self.close()
-    
-    def _on_workspace_closed(self):
-        """工作区窗口关闭时的处理"""
-        # 工作区关闭时，重新显示项目管理器
-        # 注意：如果用户选择退出应用，这个方法不会被调用，因为整个应用都会退出
-        self.show()
+        self.workspace_window.show()
+
+    def open_workspace_from_path(self, project_path: str):
+        """从路径打开工作区（供命令行调用）"""
+        try:
+            # 加载项目
+            project = self.project_manager.open_project(project_path)
+            
+            # 打开工作区
+            self._open_workspace(project)
+            
+        except Exception as e:
+            QMessageBox.critical(self, "错误", f"无法打开项目 {project_path}: {str(e)}")
+            raise e
 
     def closeEvent(self, event):
         """关闭事件"""

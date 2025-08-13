@@ -43,8 +43,8 @@ class WorkspaceWindow(QMainWindow):
 
     closed = Signal()  # 窗口关闭信号
 
-    def __init__(self, project: Project, project_manager: ProjectManager, parent=None):
-        super().__init__(parent)
+    def __init__(self, project: Project, project_manager: ProjectManager):
+        super().__init__()
         self.project = project
         self.project_manager = project_manager
         self.pages = []

@@ -49,9 +49,10 @@ class SplashScreen(QSplashScreen):
         # Setup UI elements
         self._setup_ui()
         
-        # Track timing
+        # Track timing and prevent double emission
         self.start_time = time.time()
         self.min_display_time = 2.0  # Minimum 2 seconds display
+        self._finished_emitted = False  # 防止重复发射信号
         
         # Setup loading worker
         self.loading_worker = LoadingWorker()
@@ -158,7 +159,9 @@ class SplashScreen(QSplashScreen):
     
     def _close_splash(self):
         """Close the splash screen and signal completion."""
-        self.finished.emit()  # 发射完成信号
+        if not self._finished_emitted:
+            self._finished_emitted = True
+            self.finished.emit()  # 发射完成信号
         self.close()
 
 
